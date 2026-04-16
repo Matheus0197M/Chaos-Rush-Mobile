@@ -1,9 +1,13 @@
-import MenuScene from '../js/scene/MenuScene.js'; 
-import MainScene from '../js/scene/MainScene.js';
+import LoginScene from './scene/LoginScene.js';
+import MenuScene from './scene/MenuScene.js';
+import MainScene from './scene/MainScene.js';
 
 const config = {
   type: Phaser.AUTO,
-  
+
+  dom: {
+    createContainer: true
+  },
 
   scale: {
     mode: Phaser.Scale.RESIZE,
@@ -24,7 +28,7 @@ const config = {
     }
   },
 
-  scene: [MenuScene, MainScene]
+  scene: [LoginScene, MenuScene, MainScene]
 };
 
 window.game = new Phaser.Game(config);
