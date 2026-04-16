@@ -43,7 +43,7 @@ export default class MenuScene extends Phaser.Scene {
       .setDepth(10);
 
     const painel = this.add
-      .rectangle(width / 2, height / 2 + 40, 725, 325, 0x000000, 0.5)
+      .rectangle(width / 2, height / 2.4 + 40, 800, 600, 0x000000, 0.5)
       .setOrigin(0.5)
       .setStrokeStyle(2, 0x00ffff)
       .setDepth(5);
@@ -116,7 +116,7 @@ export default class MenuScene extends Phaser.Scene {
     });
 
     this.add
-      .text(width / 2, height - 60, 'Pressione uma classe para começar!!', {
+      .text(width / 2, height - 140, 'Pressione uma classe para começar!!', {
         fontSize: '22px',
         fill: '#FFF700',
       })
