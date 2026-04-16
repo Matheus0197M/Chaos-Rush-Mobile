@@ -25,9 +25,9 @@ export default class MainScene extends Phaser.Scene {
       { key: "flask", color: 0x00ff00, type: "rect", w: 8, h: 8 }
     ];
 
-    this.load.spritesheet("alquimista", "assets/Sprites/Alquimista2.png", {
-      frameWidth: 165,
-      frameHeight: 288
+    this.load.spritesheet("alquimista", "assets/Sprites/Alquimista12.png", {
+      frameWidth: 146,
+      frameHeight: 256
     });
 
     this.load.spritesheet("coveiro", "assets/Sprites/Coveiro.png", {

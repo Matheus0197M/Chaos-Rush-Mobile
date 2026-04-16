@@ -213,7 +213,7 @@ export default class UpgradeSystem {
         name: "Cooldown -10%",
         desc: "Recarga mais rápida.",
         apply: (player) => {
-          player.stats.multiply("globalCD", 0.9);
+          player.stats.multiply("globalCD", 4);
         },
       },
 

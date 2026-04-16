@@ -310,7 +310,7 @@ export default class WeaponSystem {
 
   _applyFlaskDebuff(enemy, effect) {
     const scene = this.scene;
-    const baseDotDamage = 8 * (this.player.dotDamageBonus || 1);
+    const baseDotDamage = 10 * (this.player.dotDamageBonus || 3);
 
     switch (effect) {
       case "fire":

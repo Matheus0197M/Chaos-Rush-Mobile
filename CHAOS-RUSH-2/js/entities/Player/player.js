@@ -177,7 +177,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       this.dashing = true;
       this.dashCooldown = true;
 
-      this.scene.time.delayedCall(150, () => {
+      this.scene.time.delayedCall(350, () => {
         this.dashing = false;
       });
 
@@ -189,7 +189,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
   // SISTEMA DE XP / LEVEL
   gainXP(amount) {
-    const multiplier = this.xpGain ?? 1;
+    const multiplier = this.xpGain ?? 2;
     const final = Math.floor(amount * multiplier);
     this.xp += final;
 
