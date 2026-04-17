@@ -12,22 +12,22 @@ export default class LoginScene extends Phaser.Scene {
     this.add.rectangle(width/2, height/2, 520, 420, 0x000000, 0.65)
       .setStrokeStyle(2, 0x00ffff);
 
-    this.add.text(width/2, 150, 'LOGIN', {
-      fontSize:'34px', color:'#ffffff', fontStyle:'bold'
+    this.add.text(width/2, 220, 'LOGIN', {
+      fontSize:'34px', color:'#ffffff', fontStyle:'bold', fontFamily:'Tektur'
     }).setOrigin(0.6);
 
-    const email = this.add.dom(width/2, 240).createFromHTML(`
+    const email = this.add.dom(width/2, 310).createFromHTML(`
       <input id='email' type='email' placeholder='E-mail' style='width:320px;height:44px;padding:10px;border-radius:8px;border:1px solid #00ffff;background:#111;color:#fff; position:relative; z-index:1;'>
     `);
 
-    const senha = this.add.dom(width/2, 310).createFromHTML(`
+    const senha = this.add.dom(width/2, 400).createFromHTML(`
       <input id='senha' type='password' placeholder='Senha' style='width:320px;height:44px;padding:10px;border-radius:8px;border:1px solid #00ffff;background:#111;color:#fff;'>
     `);
 
-    const entrar = this.add.rectangle(width/2, 390, 320, 52, 0x00aaff, 0.9)
+    const entrar = this.add.rectangle(width/2, 490, 320, 52, 0x00aaff, 0.9)
       .setInteractive({ useHandCursor:true });
 
-    this.add.text(width/2, 390, 'ENTRAR', {
+    this.add.text(width/2, 490, 'ENTRAR', {
       fontSize:'24px', color:'#ffffff', fontStyle:'bold'
     }).setOrigin(0.5);
 
