@@ -20,9 +20,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
-    this.setSize(80, 120);
-    this.setOffset(88, 100);
-    this.setScale(0.5, 0.75);
+  this.setSize(146, 256);
+  this.setOffset(0, 0);
+  this.setScale(1, 1);
 
     this.animState = "idle";
     this.lastAnim = "";
@@ -249,9 +249,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       });
     }
   }
-
   updateAnimations(vx, vy) {
-
     let state = "idle";
 
     if (vx !== 0 || vy !== 0) {
@@ -273,17 +271,13 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       this.play(animKey, true);
       this.lastAnim = animKey;
     }
-    if (!this.scene.textures.exists(this.texture.key)) {
-      console.warn("Texture não encontrada:", this.texture.key);
-      return;
+
+    // Se está parado, mostra apenas o frame de idle
+    if (vx === 0 && vy === 0 && state === "idle") {
+      this.stop();
+      // Mostra o primeiro frame da animação de idle
+      const idleConfig = this.classConfig.animations.idle;
+      this.setFrame(idleConfig.start);
     }
-
-  }
-
-  // MORTE DO PLAYER
-  die() {
-    this.setTint(0xff0000);
-    this.setVelocity(0, 0);
-    this.scene.playerDied();
   }
 }

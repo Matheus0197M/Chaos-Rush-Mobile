@@ -22,11 +22,10 @@ export const PLAYER_CLASSES = {
       auraRange: 120
     },
 
-    animations: {
-      idle: { start: 0, end: 1, frameRate: 3, repeat: -1 },
-      walk: { start: 2, end: 7, frameRate: 10, repeat: -1 }
-    },
-
+animations: {
+  idle: { start: 0, end: 1, frameRate: 3, repeat: -1 },
+  walk: { start: 2, end: 5, frameRate: 10, repeat: -1 }
+},
     passive: PassiveAlquimista,
     weaponKey: "frascoInstavel"
   },
