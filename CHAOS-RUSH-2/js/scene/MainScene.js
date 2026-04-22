@@ -25,6 +25,8 @@ export default class MainScene extends Phaser.Scene {
       { key: "flask", color: 0xffffff, type: "rect", w: 8, h: 8 }
     ];
 
+    this.load.image('map', 'assets/img/map.png');
+
     this.load.spritesheet("alquimista", "assets/Sprites/Alquimista12.png", {
       frameWidth: 146,
       frameHeight: 256
@@ -68,8 +70,16 @@ export default class MainScene extends Phaser.Scene {
 
 
   create() {
-    this.cursors = this.input.keyboard.addKeys("W,S,A,D");
-    this.cameras.main.setBackgroundColor("#202733");
+// Mundo
+  this.worldWidth = 10000;
+  this.worldHeight = 10000;
+  this.physics.world.setBounds(0, 0, this.worldWidth, this.worldHeight);
+
+  // ✅ Certo - imagem única cobrindo todo o mundo
+this.add.image(0, 0, 'map')
+  .setOrigin(0)
+  .setDisplaySize(this.worldWidth, this.worldHeight)
+  .setDepth(-1);
 
     // Mundo
     this.worldWidth = 5000;
