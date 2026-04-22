@@ -22,7 +22,7 @@ export default class MainScene extends Phaser.Scene {
       { key: "player", color: 0xffffff, type: "rect", w: 20, h: 20 },
       { key: "enemy", color: 0xff3333, type: "rect", w: 20, h: 20 },
       { key: "xp_orb", color: 0x6a00ff, type: "circle", r: 5 },
-      { key: "flask", color: 0x00ff00, type: "rect", w: 8, h: 8 }
+      { key: "flask", color: 0xffffff, type: "rect", w: 8, h: 8 }
     ];
 
     this.load.spritesheet("alquimista", "assets/Sprites/Alquimista12.png", {
