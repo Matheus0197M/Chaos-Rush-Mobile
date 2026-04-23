@@ -28,11 +28,11 @@ export default class MainScene extends Phaser.Scene {
     this.load.image('map', 'assets/img/map.png');
 
     this.load.spritesheet("alquimista", "assets/Sprites/Alquimista12.png", {
-      frameWidth: 146,
-      frameHeight: 256
+      frameWidth: 165,
+      frameHeight: 288
     });
 
-    this.load.spritesheet("coveiro", "assets/Sprites/Coveiro.png", {
+    this.load.spritesheet("coveiro", "assets/Sprites/Coveiro22.png", {
       frameWidth: 256,
       frameHeight: 256
     });
@@ -82,7 +82,7 @@ this.add.image(0, 0, 'map')
   .setDepth(-1);
 
     // Mundo
-    this.worldWidth = 5000;
+    this.worldWidth = 8000;
     this.worldHeight = 5000;
     this.physics.world.setBounds(0, 0, this.worldWidth, this.worldHeight);
 

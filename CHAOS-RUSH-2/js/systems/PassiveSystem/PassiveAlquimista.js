@@ -1,4 +1,3 @@
-// PassiveAlquimista.js
 export default class PassiveAlquimista {
   constructor(scene, player) {
     this.scene = scene;
