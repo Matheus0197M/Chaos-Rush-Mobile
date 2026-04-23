@@ -27,7 +27,12 @@ animations: {
   walk: { start: 2, end: 5, frameRate: 10, repeat: -1 }
 },
     passive: PassiveAlquimista,
-    weaponKey: "frascoInstavel"
+    weaponKey: "frascoInstavel",
+    spriteWidth: 146,
+    spriteHeight: 256,
+    hitboxWidth: 146,
+    hitboxHeight: 256,
+    spriteScale: 1
   },
 
   coveiro: {
@@ -50,7 +55,12 @@ animations: {
     },
 
     passive: PassiveCoveiro,
-    weaponKey: "foiceEnferrujada"
+    weaponKey: "foiceEnferrujada",
+    spriteWidth: 256,
+    spriteHeight: 256,
+    hitboxWidth: 200,
+    hitboxHeight: 200,
+    spriteScale: 0.8
   },
 
   sentinela: {
