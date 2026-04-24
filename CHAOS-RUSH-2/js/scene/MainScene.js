@@ -33,8 +33,8 @@ export default class MainScene extends Phaser.Scene {
     });
 
     this.load.spritesheet("coveiro", "assets/Sprites/Coveiro22.png", {
-      frameWidth: 256,
-      frameHeight: 256
+      frameWidth: 226,
+      frameHeight: 406
     });
 
     this.load.spritesheet("sentinela", "assets/Sprites/Sentinela.png", {
