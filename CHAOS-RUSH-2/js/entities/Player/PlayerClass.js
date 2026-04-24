@@ -56,8 +56,8 @@ animations: {
 
     passive: PassiveCoveiro,
     weaponKey: "foiceEnferrujada",
-    spriteWidth: 256,
-    spriteHeight: 256,
+    spriteWidth: 10,
+    spriteHeight: 10,
     hitboxWidth: 200,
     hitboxHeight: 200,
     spriteScale: 0.8
