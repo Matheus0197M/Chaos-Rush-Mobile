@@ -1,3 +1,5 @@
+// TEAM CR2 { MATHEUS, CAIO, ENZO, EDUARDO, PEDRO } - SECUNDÁRIO
+
 import LoginScene from './scene/LoginScene.js';
 import RegisterScene from './scene/RegisterScene.js';
 import MenuScene from './scene/MenuScene.js';

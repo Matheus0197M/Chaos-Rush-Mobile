@@ -23,15 +23,15 @@ export const PLAYER_CLASSES = {
     },
 
 animations: {
-  idle: { start: 0, end: 1, frameRate: 3, repeat: -1 },
-  walk: { start: 2, end: 5, frameRate: 10, repeat: -1 }
+  idle: { start: 0, end: 0, frameRate: 1, repeat: -1 },
+  walk: { start: 0, end: 7, frameRate: 7, repeat: -1 }
 },
     passive: PassiveAlquimista,
     weaponKey: "frascoInstavel",
-    spriteWidth: 146,
-    spriteHeight: 256,
-    hitboxWidth: 146,
-    hitboxHeight: 256,
+    spriteWidth: 120,
+    spriteHeight: 200,
+    hitboxWidth: 120,
+    hitboxHeight: 200,
     spriteScale: 1
   },
 
@@ -56,8 +56,8 @@ animations: {
 
     passive: PassiveCoveiro,
     weaponKey: "foiceEnferrujada",
-    spriteWidth: 256,
-    spriteHeight: 256,
+    spriteWidth: 10,
+    spriteHeight: 10,
     hitboxWidth: 200,
     hitboxHeight: 200,
     spriteScale: 0.8
