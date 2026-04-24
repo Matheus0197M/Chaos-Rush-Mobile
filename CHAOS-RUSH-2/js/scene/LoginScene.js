@@ -1,3 +1,5 @@
+import { supabase } from '../supabaseClient.js';
+
 export default class LoginScene extends Phaser.Scene {
   constructor(){ super({ key:'LoginScene' }); }
 
@@ -35,7 +37,7 @@ export default class LoginScene extends Phaser.Scene {
       fontSize:'18px', color:'#ffff00'
     }).setOrigin(0.5);
 
-    entrar.on('pointerdown', () => {
+    entrar.on('pointerdown', async () => {
       const emailValue = email.node.querySelector('#email').value.trim();
       const senhaValue = senha.node.querySelector('#senha').value.trim();
 
@@ -44,13 +46,43 @@ export default class LoginScene extends Phaser.Scene {
         return;
       }
 
-      localStorage.setItem('chaos_user', emailValue);
+      status.setText('Conectando...');
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: emailValue,
+        password: senhaValue
+      });
+
+      console.log('Supabase login result', { emailValue, data, error });
+
+      if(error){
+        status.setText(error.message || 'Erro ao autenticar');
+        return;
+      }
+
+      if(!data || !data.session){
+        status.setText('Falha no login: sessão não gerada');
+        console.error('Supabase login sem session', data);
+        return;
+      }
+
+      // Salva dados do usuário
+      const userName = data.user?.user_metadata?.nome || data.user?.email || '';
+      localStorage.setItem('chaos_user', JSON.stringify({
+        email: data.user.email,
+        nome: userName
+      }));
+
       status.setText('Login realizado!');
       this.time.delayedCall(700, () => this.scene.start('MenuScene'));
     });
 
-    this.add.text(width/2, height-60, 'Primeiro acesso? Clique em ENTRAR para testar.', {
+    const registerLink = this.add.text(width/2, height-60, 'Ainda não tem conta? Registrar', {
       fontSize:'16px', color:'#cccccc'
-    }).setOrigin(0.5);
+    }).setOrigin(0.5).setInteractive({ useHandCursor:true });
+
+    registerLink.on('pointerdown', () => {
+      this.scene.start('RegisterScene');
+    });
   }
 }
