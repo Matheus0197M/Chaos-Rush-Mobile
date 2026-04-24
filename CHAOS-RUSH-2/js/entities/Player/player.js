@@ -20,9 +20,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
-  this.setSize(146, 256);
-  this.setOffset(0, 0);
-  this.setScale(1, 1);
+    this.setSize(80, 120);
+    this.setOffset(88, 100);
+    this.setScale(0.5, 0.75);
 
     this.animState = "idle";
     this.lastAnim = "";
@@ -177,7 +177,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       this.dashing = true;
       this.dashCooldown = true;
 
-      this.scene.time.delayedCall(350, () => {
+      this.scene.time.delayedCall(150, () => {
         this.dashing = false;
       });
 
@@ -189,7 +189,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
   // SISTEMA DE XP / LEVEL
   gainXP(amount) {
-    const multiplier = this.xpGain ?? 2;
+    const multiplier = this.xpGain ?? 1;
     const final = Math.floor(amount * multiplier);
     this.xp += final;
 
@@ -249,6 +249,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       });
     }
   }
+
   updateAnimations(vx, vy) {
     let state = "idle";
 
@@ -279,5 +280,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       const idleConfig = this.classConfig.animations.idle;
       this.setFrame(idleConfig.start);
     }
+  }
+
+  // MORTE DO PLAYER
+  die(){
+    this.setTint(0xf00);
+    this.setVelocity(0,0);
+    this.scene.playerDied();
   }
 }
