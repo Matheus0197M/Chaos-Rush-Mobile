@@ -70,16 +70,24 @@ export default class MainScene extends Phaser.Scene {
 
 
   create() {
-// Mundo
-  this.worldWidth = 10000;
-  this.worldHeight = 10000;
-  this.physics.world.setBounds(0, 0, this.worldWidth, this.worldHeight);
+    // Tecla ESC do menu de pausa
+    this.input.keyboard.on('keydown-ESC', () => {
+      if (!this.scene.isPaused('MainScene')) {
+        this.pauseGame();
+        this.scene.launch('PauseMenu');
+      }
+    })
 
-  // ✅ Certo - imagem única cobrindo todo o mundo
-this.add.image(0, 0, 'map')
-  .setOrigin(0)
-  .setDisplaySize(this.worldWidth, this.worldHeight)
-  .setDepth(-1);
+    // Mundo
+    this.worldWidth = 10000;
+    this.worldHeight = 10000;
+    this.physics.world.setBounds(0, 0, this.worldWidth, this.worldHeight);
+
+    // ✅ Certo - imagem única cobrindo todo o mundo
+    this.add.image(0, 0, 'map')
+      .setOrigin(0)
+      .setDisplaySize(this.worldWidth, this.worldHeight)
+      .setDepth(-1);
 
     // Mundo
     this.worldWidth = 8000;
@@ -263,6 +271,15 @@ this.add.image(0, 0, 'map')
         fill: "#ffffff",
       })
       .setScrollFactor(0);
+
+    this.pauseMenu = this.add
+      .text(25, 95, "ESC - Pausar", {
+        fontSize: "14px",
+        fontFamily: "sans-serif",
+        fill: "#ffffff",
+      })
+      .setScrollFactor(0)
+      .setDepth(1000);
 
     this.updateHealthBar();
     this.updateXpBar();
@@ -540,5 +557,17 @@ this.add.image(0, 0, 'map')
         txt.destroy()
       }
     });
+  }
+
+  resumeGame() {
+    this.physics.resume();
+    this.scene.resume();
+    this.time.timeScale = 1;
+  }
+
+  pauseGame() {
+    this.physics.pause();
+    this.scene.pause();
+    this.time.timeScale = 0;
   }
 }

@@ -4,6 +4,7 @@ import LoginScene from './scene/LoginScene.js';
 import RegisterScene from './scene/RegisterScene.js';
 import MenuScene from './scene/MenuScene.js';
 import MainScene from './scene/MainScene.js';
+import PauseMenu from './scene/PauseMenu.js';
 
 const config = {
   type: Phaser.AUTO,
@@ -31,7 +32,7 @@ const config = {
     }
   },
 
-  scene: [LoginScene, RegisterScene, MenuScene, MainScene]
+  scene: [LoginScene, RegisterScene, MenuScene, MainScene, PauseMenu]
 };
 
 window.game = new Phaser.Game(config);
