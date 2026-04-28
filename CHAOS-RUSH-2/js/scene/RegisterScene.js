@@ -29,12 +29,35 @@ export default class RegisterScene extends Phaser.Scene {
     `);
 
     const senha = this.add.dom(width / 2, 420).createFromHTML(`
-      <input id='senha' type='password' placeholder='Senha' style='width:320px;height:44px;padding:10px;border-radius:8px;border:1px solid #00ffff;background:#111;color:#fff;'>
+      <div style='position:relative;width:320px;height:44px;'>
+        <input id='senha' type='password' placeholder='Senha' style='width:100%;height:44px;padding:10px 46px 10px 10px;border-radius:8px;border:1px solid #00ffff;background:#111;color:#fff;box-sizing:border-box;'>
+        <button id='toggle-senha' type='button' aria-label='Mostrar senha' style='position:absolute;right:8px;top:50%;transform:translateY(-50%);width:32px;height:32px;border:none;background:transparent;color:#00ffff;font-size:18px;cursor:pointer;'>&#128065;</button>
+      </div>
     `);
 
     const confirmar = this.add.dom(width / 2, 480).createFromHTML(`
-      <input id='confirmar-senha' type='password' placeholder='Confirmar senha' style='width:320px;height:44px;padding:10px;border-radius:8px;border:1px solid #00ffff;background:#111;color:#fff;'>
+      <div style='position:relative;width:320px;height:44px;'>
+        <input id='confirmar-senha' type='password' placeholder='Confirmar senha' style='width:100%;height:44px;padding:10px 46px 10px 10px;border-radius:8px;border:1px solid #00ffff;background:#111;color:#fff;box-sizing:border-box;'>
+        <button id='toggle-confirmar-senha' type='button' aria-label='Mostrar senha' style='position:absolute;right:8px;top:50%;transform:translateY(-50%);width:32px;height:32px;border:none;background:transparent;color:#00ffff;font-size:18px;cursor:pointer;'>&#128065;</button>
+      </div>
     `);
+
+    const senhaInput = senha.node.querySelector('#senha');
+    const toggleSenha = senha.node.querySelector('#toggle-senha');
+    const confirmarInput = confirmar.node.querySelector('#confirmar-senha');
+    const toggleConfirmarSenha = confirmar.node.querySelector('#toggle-confirmar-senha');
+
+    toggleSenha.addEventListener('click', () => {
+      const mostrando = senhaInput.type === 'text';
+      senhaInput.type = mostrando ? 'password' : 'text';
+      toggleSenha.setAttribute('aria-label', mostrando ? 'Mostrar senha' : 'Ocultar senha');
+    });
+
+    toggleConfirmarSenha.addEventListener('click', () => {
+      const mostrando = confirmarInput.type === 'text';
+      confirmarInput.type = mostrando ? 'password' : 'text';
+      toggleConfirmarSenha.setAttribute('aria-label', mostrando ? 'Mostrar senha' : 'Ocultar senha');
+    });
 
     const cadastrar = this.add.rectangle(width / 2, 550, 320, 52, 0x00aaff, 0.9)
       .setInteractive({ useHandCursor: true });
@@ -50,8 +73,8 @@ export default class RegisterScene extends Phaser.Scene {
     cadastrar.on('pointerdown', async () => {
       const nomeValue = nome.node.querySelector('#nome').value.trim();
       const emailValue = email.node.querySelector('#email').value.trim();
-      const senhaValue = senha.node.querySelector('#senha').value.trim();
-      const confirmarValue = confirmar.node.querySelector('#confirmar-senha').value.trim();
+      const senhaValue = senhaInput.value.trim();
+      const confirmarValue = confirmarInput.value.trim();
 
       if (!nomeValue || !emailValue || !senhaValue || !confirmarValue) {
         status.setText('Preencha todos os campos');
