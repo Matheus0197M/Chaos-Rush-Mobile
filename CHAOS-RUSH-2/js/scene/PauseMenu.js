@@ -71,10 +71,12 @@ export default class PauseMenu extends Phaser.Scene {
     }
 
     resumeGame() {
-        // Comando oficial do Phaser para retomar a cena anterior
-        this.scene.resume('MainScene');
-        this.scene.stop();
+    const mainScene = this.scene.get('MainScene');
+    if (mainScene) {
+        mainScene.resumeGame();  // ← Isso chama o método COMPLETO da MainScene
     }
+    this.scene.stop();
+}
 
     restartGame() {
         this.scene.stop('PauseMenu');
