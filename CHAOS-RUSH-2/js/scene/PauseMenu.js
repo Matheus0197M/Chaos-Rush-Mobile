@@ -2,50 +2,50 @@ export default class PauseMenu extends Phaser.Scene {
     constructor() {
         super({ key: 'PauseMenu' });
     }
+
     create() {
-        // Fundo, malandro
-        const fundoCor = this.add.graphics();
-        fundoCor.fillStyle(0x111111, 0.7);
-        fundoCor.fillRect(0, 0, 800, 800);
+        const { width, height } = this.scale;
 
-        // Container centralizado para UI, segundo a IA do BlackBox KKKKK
-        this.pauseContainer = this.add.container(400, 400);
+        // Fundo escurecido - Cobrindo a tela toda
+        const fundoCor = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.7);
+        fundoCor.setScrollFactor(0);
 
-        // Agora sim vem o painel principal
+        // Container centralizado
+        this.pauseContainer = this.add.container(width / 2, height / 2);
+        this.pauseContainer.setScrollFactor(0);
+
+        // Painel Principal (Corrigido o Hexadecimal)
         const painel = this.add.graphics();
-        painel.fillStyle(0x2c4a9033, 1);
-        painel.fillRoundedRect(-200, -150, 400, 300, 20);
-        painel.lineStyle(3, 0x34495e);
-        painel.strokeRoundedRect(-200, -150, 400, 300, 20);
+        painel.fillStyle(0x101f21, 0.9); // Cor sólida com alpha no segundo parâmetro
+        painel.fillRoundedRect(-200, -150, 400, 350, 20);
+        painel.lineStyle(4, 0x3498db);
+        painel.strokeRoundedRect(-200, -150, 400, 350, 20);
 
-        // Title do menu
         const title = this.add.text(0, -100, 'JOGO PAUSADO', {
             fontSize: '40px',
             fontFamily: 'Arial Black',
-            fill: '#ecf0f1',
-            stroke: '#2c3e50',
-            strokeThickness: 6
+            fill: '#ecf0f1'
         }).setOrigin(0.5);
 
-        // Botões [Caio beiçudo]
-        this.createButtons();
-
-        // Adiciona elementos ao container
+        // Adiciona ao container ANTES de criar os botões
         this.pauseContainer.add([painel, title]);
 
-        // Entrada com animação OIA
+        // Cria os botões e já os coloca no container
+        this.createButtons();
+
+        // Garante que o container apareça ACIMA do fundo
+        this.pauseContainer.setDepth(10); 
+
+        // Efeito de entrada
+        this.pauseContainer.setScale(0);
         this.tweens.add({
             targets: this.pauseContainer,
-            scale: 1.2,
-            alpha: 1.2,
+            scale: 1,
             duration: 300,
             ease: 'Back.easeOut'
         });
 
-        // ESC pra sair da tela de pause
-        this.input.keyboard.on('keydown-ESC', () => {
-            this.resumeGame();
-        });
+        this.input.keyboard.on('keydown-ESC', () => this.resumeGame());
     }
 
     createButtons() {
@@ -56,41 +56,23 @@ export default class PauseMenu extends Phaser.Scene {
         ];
 
         buttons.forEach((buttonData, index) => {
-            // O que é um FOREACH mesmo?
             const botao = this.add.text(0, 20 + (index * 60), buttonData.text, {
                 fontSize: '24px',
                 fill: '#ecf0f1',
-                fontFamily: 'Arial',
-                stroke: '#2c3e50',
-                strokeThickness: 4
-            }).setOrigin(0.5);
+                fontFamily: 'Arial'
+            }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
-            // Efeito hover 
-            botao.setInteractive({ useHandCursor: true })
-                .on('pointerover', () => {
-                    botao.setStyle({ fill: '#3498db' });
-                    this.tweens.add({
-                        targets: botao,
-                        scale: 1.1,
-                        duration: 200,
-                        yoyo: true,
-                        repeat: 1
-                    });
-                })
-                .on('pointerout', () => {
-                    botao.setStyle({ fill: '#ecf0f1' });
-                })
-                .on('pointerdown', () => buttonData.callback());
+            botao.on('pointerover', () => botao.setStyle({ fill: '#3498db' }));
+            botao.on('pointerout', () => botao.setStyle({ fill: '#ecf0f1' }));
+            botao.on('pointerdown', () => buttonData.callback());
 
             this.pauseContainer.add(botao);
         });
     }
 
     resumeGame() {
-        const mainScene = this.scene.get('MainScene');
-        if (mainScene) {
-            mainScene.resumeGame();
-        }
+        // Comando oficial do Phaser para retomar a cena anterior
+        this.scene.resume('MainScene');
         this.scene.stop();
     }
 
@@ -101,7 +83,7 @@ export default class PauseMenu extends Phaser.Scene {
 
     goToMenu() {
         this.scene.stop('PauseMenu');
-        this.scene.get('MainScene').scene.stop();
+        this.scene.stop('MainScene');
         this.scene.start('MenuScene');
     }
 }

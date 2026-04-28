@@ -125,7 +125,7 @@ export default class UpgradeSystem {
               onComplete: () => circle.destroy()
             });
           }
-          
+
           player.stats.addFlat("critChance", 0.1);
         },
       },
@@ -267,12 +267,12 @@ export default class UpgradeSystem {
     this.scene.physics.pause();
     if (this.scene.weaponLoopEvent) this.scene.weaponLoopEvent.paused = true;
 
-    const cam = this.scene.cameras.main;
     const cx = cam.worldView.x + cam.width / 2;
     const cy = cam.worldView.y + cam.height / 2;
 
     this.menuContainer = this.scene.add.container(0, 0).setDepth(9999);
 
+    const cam = this.scene.cameras.main;
     const bg = this.scene.add
       .rectangle(cx, cy, cam.width, cam.height, 0x000000, 0.75)
       .setOrigin(0.5)
