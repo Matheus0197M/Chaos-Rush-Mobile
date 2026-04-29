@@ -49,7 +49,7 @@ export default class LoginScene extends Phaser.Scene {
       fontSize:'18px', color:'#ffff00'
     }).setOrigin(0.5);
 
-    entrar.on('pointerdown', async () => {
+    const executarLogin = async () => {
       const emailValue = email.node.querySelector('#email').value.trim();
       const senhaValue = senhaInput.value.trim();
 
@@ -87,6 +87,15 @@ export default class LoginScene extends Phaser.Scene {
 
       status.setText('Login realizado!');
       this.time.delayedCall(700, () => this.scene.start('MenuScene'));
+    };
+
+    entrar.on('pointerdown', executarLogin);
+
+    // Adiciona suporte para tecla Enter
+    document.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter'){
+        executarLogin();
+      }
     });
 
     const registerLink = this.add.text(width/2, height-60, 'Ainda não tem conta? Registrar', {
