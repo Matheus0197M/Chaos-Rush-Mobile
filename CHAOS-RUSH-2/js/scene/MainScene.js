@@ -455,21 +455,32 @@ export default class MainScene extends Phaser.Scene {
 
   handlePlayerHit(player, enemy) {
     if (!player.lastHitTime || this.time.now - player.lastHitTime > 1000) {
-      player.currentHP -= 10;
-      this.updateHealthBar();
+      if (typeof player.takeDamage === "function") {
+        player.takeDamage(10);
+      } else {
+        player.currentHP -= 10;
+        this.updateHealthBar();
+      }
+
+      if (player.currentHP <= 0) {
+        this.handlePlayerDeath();
+        return;
+      }
 
       player.setTint?.(0xff5555);
       this.time.delayedCall(150, () => player.clearTint?.());
 
       player.lastHitTime = this.time.now;
-
-      if (player.currentHP <= 0) {
-        this.handlePlayerDeath();
-      }
     }
   }
 
+  playerDied() {
+    this.handlePlayerDeath();
+  }
+
   handlePlayerDeath() {
+    if (this.runEnded) return;
+
     this.player.setTint?.(0x000000);
     this.handleRunEnd("GAME OVER", "#ff0000");
     return;
