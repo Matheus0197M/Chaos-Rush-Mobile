@@ -338,6 +338,9 @@ export default class MainScene extends Phaser.Scene {
     this.enemies.children.iterate(enemy => {
       enemy?.update?.(time, delta);
     });
+    // No update() da MainScene, adicione temporariamente:
+    console.log('Enemies:', this.enemies.countActive(true));
+    console.log('XP Orbs:', this.xpOrbs.countActive(true));
 
     // XP Orbs
     this.xpOrbs.children.iterate(orb => {

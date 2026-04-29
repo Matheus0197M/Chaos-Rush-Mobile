@@ -125,7 +125,7 @@ export default class UpgradeSystem {
               onComplete: () => circle.destroy()
             });
           }
-          
+
           player.stats.addFlat("critChance", 0.1);
         },
       },
