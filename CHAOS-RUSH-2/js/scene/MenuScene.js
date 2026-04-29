@@ -1,3 +1,5 @@
+import { fetchRankings } from "../systems/RankingService.js";
+
 export default class MenuScene extends Phaser.Scene {
   constructor() {
     super({ key: 'MenuScene' });
@@ -10,6 +12,17 @@ export default class MenuScene extends Phaser.Scene {
   create() {
     const width = this.scale.width;
     const height = this.scale.height;
+    const hasRankingColumn = width >= 1100;
+    const isCompact = !hasRankingColumn || height < 760;
+    const titleY = isCompact ? 58 : 86;
+    const subtitleY = titleY + 48;
+    const classPanelX = hasRankingColumn ? width * 0.34 : width / 2;
+    const classPanelY = hasRankingColumn ? height / 2 + 38 : Math.min(330, height * 0.43);
+    const classPanelWidth = Math.min(hasRankingColumn ? 620 : 760, width - 32);
+    const classPanelHeight = hasRankingColumn ? Math.min(520, height - 210) : Math.min(330, height * 0.46);
+    const classButtonWidth = Math.max(280, classPanelWidth - 70);
+    const classButtonHeight = isCompact ? 72 : 80;
+    const classButtonGap = isCompact ? 82 : 92;
 
     this.bgFar = this.add
       .tileSprite(0, 0, width, height, 'menuBg')
@@ -26,8 +39,8 @@ export default class MenuScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor('#080a10');
 
     this.add
-      .text(width / 2, 100, 'CHAOS RUSH', {
-        fontSize: '64px',
+      .text(width / 2, titleY, 'CHAOS RUSH', {
+        fontSize: `${Math.min(64, Math.max(40, width * 0.09))}px`,
         fill: '#00ffff',
         fontStyle: 'bold',
       })
@@ -35,15 +48,15 @@ export default class MenuScene extends Phaser.Scene {
       .setDepth(10);
 
     this.add
-      .text(width / 2, 160, 'Fractured Realms', {
-        fontSize: '20px',
+      .text(width / 2, subtitleY, 'Fractured Realms', {
+        fontSize: `${isCompact ? 16 : 20}px`,
         fill: '#cccccc',
       })
       .setOrigin(0.5)
       .setDepth(10);
 
     const painel = this.add
-      .rectangle(width / 2, height / 2.4 + 40, 800, 600, 0x000000, 0.5)
+      .rectangle(classPanelX, classPanelY, classPanelWidth, classPanelHeight, 0x000000, 0.55)
       .setOrigin(0.5)
       .setStrokeStyle(2, 0x00ffff)
       .setDepth(5);
@@ -67,20 +80,20 @@ export default class MenuScene extends Phaser.Scene {
       },
     ];
 
-    const startY = height / 2 - 50;
+    const startY = classPanelY - classButtonGap;
 
     classes.forEach((cls, i) => {
-      const btnY = startY + i * 90;
+      const btnY = startY + i * classButtonGap;
 
       const btn = this.add
-        .rectangle(width / 2, btnY, 600, 80, 0x111122, 0.7)
+        .rectangle(classPanelX, btnY, classButtonWidth, classButtonHeight, 0x111122, 0.74)
         .setStrokeStyle(2, 0x00ffff)
         .setInteractive({ useHandCursor: true })
         .setDepth(6);
 
       this.add
-        .text(btn.x, btnY - 20, cls.name, {
-          fontSize: '22px',
+        .text(btn.x, btnY - classButtonHeight * 0.24, cls.name, {
+          fontSize: `${isCompact ? 17 : 22}px`,
           fill: '#00ffff',
           fontStyle: 'bold',
         })
@@ -88,11 +101,11 @@ export default class MenuScene extends Phaser.Scene {
         .setDepth(7);
 
       this.add
-        .text(btn.x, btnY + 15, cls.desc, {
-          fontSize: '14px',
+        .text(btn.x, btnY + classButtonHeight * 0.18, cls.desc, {
+          fontSize: `${isCompact ? 12 : 14}px`,
           fill: '#cccccc',
           align: 'center',
-          wordWrap: { width: 550 },
+          wordWrap: { width: classButtonWidth - 50 },
         })
         .setOrigin(0.5)
         .setDepth(7);
@@ -105,25 +118,140 @@ export default class MenuScene extends Phaser.Scene {
 
       if (cls.estreia) {
         this.add
-          .text(btn.x - 295, btnY - 35, cls.estreia, {
-            fontSize: '20px',
+          .text(btn.x - classButtonWidth / 2 + 14, btnY - classButtonHeight / 2 + 8, cls.estreia, {
+            fontSize: `${isCompact ? 13 : 16}px`,
             fill: '#ffff00',
             fontStyle: 'bold',
           })
-          .setOrigin(0.01)
+          .setOrigin(0)
           .setDepth(7);
       }
     });
 
     this.add
-      .text(width / 2, height - 140, 'Pressione uma classe para começar!!', {
-        fontSize: '22px',
+      .text(classPanelX, classPanelY + classPanelHeight / 2 - 28, 'Pressione uma classe para começar!!', {
+        fontSize: `${isCompact ? 15 : 20}px`,
         fill: '#FFF700',
       })
       .setOrigin(0.5)
       .setDepth(7);
 
+    this.createRankingPanel(width, height, {
+      hasRankingColumn,
+      classPanelY,
+      classPanelHeight,
+      isCompact,
+    });
+
     this.scale.on('resize', this.resize, this);
+  }
+
+  createRankingPanel(width, height, layout) {
+    const { hasRankingColumn, classPanelY, classPanelHeight, isCompact } = layout;
+    const panelWidth = hasRankingColumn ? Math.min(380, width * 0.29) : Math.min(760, width - 32);
+    const bottomSpace = height - (classPanelY + classPanelHeight / 2) - 58;
+    const panelHeight = hasRankingColumn ? classPanelHeight : Math.max(175, Math.min(235, bottomSpace));
+    const panelX = hasRankingColumn ? width * 0.78 : width / 2;
+    const panelY = hasRankingColumn
+      ? classPanelY
+      : Math.min(height - panelHeight / 2 - 14, classPanelY + classPanelHeight / 2 + 48 + panelHeight / 2);
+
+    this.add
+      .rectangle(panelX, panelY, panelWidth, panelHeight, 0x000000, 0.64)
+      .setOrigin(0.5)
+      .setStrokeStyle(2, 0xfff700)
+      .setDepth(8);
+
+    this.add.text(panelX, panelY - panelHeight / 2 + 30, 'RANKING', {
+      fontSize: `${isCompact ? 20 : 26}px`,
+      fill: '#fff700',
+      fontStyle: 'bold',
+    })
+      .setOrigin(0.5)
+      .setDepth(9);
+
+    const headerY = panelY - panelHeight / 2 + (isCompact ? 52 : 70);
+    this.add.text(panelX - panelWidth * 0.42, headerY, '#', {
+      fontSize: `${isCompact ? 12 : 14}px`,
+      fill: '#00ffff',
+      fontStyle: 'bold',
+    }).setDepth(9);
+
+    this.add.text(panelX - panelWidth * 0.32, headerY, 'Jogador', {
+      fontSize: `${isCompact ? 12 : 14}px`,
+      fill: '#00ffff',
+      fontStyle: 'bold',
+    }).setDepth(9);
+
+    this.add.text(panelX + panelWidth * 0.12, headerY, 'Pontos', {
+      fontSize: `${isCompact ? 12 : 14}px`,
+      fill: '#00ffff',
+      fontStyle: 'bold',
+    }).setOrigin(0.5, 0).setDepth(9);
+
+    this.add.text(panelX + panelWidth * 0.32, headerY, 'Lv', {
+      fontSize: `${isCompact ? 12 : 14}px`,
+      fill: '#00ffff',
+      fontStyle: 'bold',
+    }).setOrigin(0.5, 0).setDepth(9);
+
+    this.rankingStatusText = this.add.text(panelX, panelY, 'Carregando ranking...', {
+      fontSize: `${isCompact ? 13 : 16}px`,
+      fill: '#cccccc',
+      align: 'center',
+      wordWrap: { width: panelWidth - 40 },
+    })
+      .setOrigin(0.5)
+      .setDepth(9);
+
+    this.loadRankingRows(panelX, panelY, panelWidth, panelHeight, isCompact);
+  }
+
+  async loadRankingRows(panelX, panelY, panelWidth, panelHeight, isCompact) {
+    const rows = await fetchRankings(isCompact ? 5 : 10);
+
+    this.rankingStatusText?.destroy();
+
+    if (!rows.length) {
+      this.rankingStatusText = this.add.text(panelX, panelY, 'Nenhuma pontuacao registrada ainda.', {
+        fontSize: `${isCompact ? 13 : 16}px`,
+        fill: '#cccccc',
+        align: 'center',
+        wordWrap: { width: panelWidth - 40 },
+      })
+        .setOrigin(0.5)
+        .setDepth(9);
+      return;
+    }
+
+    const startY = panelY - panelHeight / 2 + (isCompact ? 78 : 100);
+    const rowGap = Math.min(isCompact ? 27 : 36, (panelHeight - (isCompact ? 95 : 120)) / rows.length);
+
+    rows.forEach((row, index) => {
+      const y = startY + index * rowGap;
+      const name = String(row.nome).slice(0, isCompact ? 12 : 14);
+      const fontSize = `${isCompact ? 12 : 14}px`;
+
+      this.add.text(panelX - panelWidth * 0.42, y, `${row.position}`, {
+        fontSize,
+        fill: '#ffffff',
+      }).setDepth(9);
+
+      this.add.text(panelX - panelWidth * 0.32, y, name, {
+        fontSize,
+        fill: '#ffffff',
+      }).setDepth(9);
+
+      this.add.text(panelX + panelWidth * 0.12, y, `${row.maxPontuacao}`, {
+        fontSize,
+        fill: '#fff700',
+      }).setOrigin(0.5, 0).setDepth(9);
+
+      this.add.text(panelX + panelWidth * 0.34, y, `${row.maxLevel}`, {
+        fontSize,
+        fill: '#00ffff',
+      }).setOrigin(0.5, 0).setDepth(9);
+    });
   }
 
   resize(gameSize) {

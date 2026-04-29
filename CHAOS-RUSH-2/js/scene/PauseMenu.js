@@ -78,12 +78,19 @@ export default class PauseMenu extends Phaser.Scene {
     this.scene.stop();
 }
 
-    restartGame() {
+    async restartGame() {
+        const mainScene = this.scene.get('MainScene');
+        await mainScene?.saveCurrentRanking?.();
+        const selectedClassKey = mainScene?.selectedClassKey;
+
         this.scene.stop('PauseMenu');
-        this.scene.get('MainScene').scene.restart();
+        mainScene.scene.restart({ selectedClassKey });
     }
 
-    goToMenu() {
+    async goToMenu() {
+        const mainScene = this.scene.get('MainScene');
+        await mainScene?.saveCurrentRanking?.();
+
         this.scene.stop('PauseMenu');
         this.scene.stop('MainScene');
         this.scene.start('MenuScene');

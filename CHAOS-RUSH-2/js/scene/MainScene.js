@@ -8,6 +8,7 @@ import WeaponSystem from "../systems/WeaponSystem.js";
 import SpawnDirector from "../Director/SpawnDirector.js";
 import { PLAYER_CLASSES } from "../entities/Player/PlayerClass.js";
 import EnemyBullet from "../entities/Enemy/EnemyBullet.js";
+import { saveBestRanking } from "../systems/RankingService.js";
 
 export default class MainScene extends Phaser.Scene {
   constructor() {
@@ -70,6 +71,11 @@ export default class MainScene extends Phaser.Scene {
 
 
   create() {
+    this.score = 0;
+    this.rankingSaved = false;
+    this.rankingSavePromise = null;
+    this.runEnded = false;
+
     // Tecla ESC do menu de pausa
     this.input.keyboard.on('keydown-ESC', () => {
       if (!this.scene.isPaused('MainScene')) {
@@ -142,6 +148,15 @@ export default class MainScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(1000);
 
+    this.scoreText = this.add.text(16, 42, "Pontos: 0", {
+      fontSize: "18px",
+      fill: "#00ffff",
+      stroke: "#000",
+      strokeThickness: 3
+    })
+      .setScrollFactor(0)
+      .setDepth(1000);
+
     // ===== INPUT =====
     this.spaceKey = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.SPACE
@@ -169,6 +184,7 @@ export default class MainScene extends Phaser.Scene {
     // XP drop
     this.events.on("enemyKilled", enemy => {
       if (!enemy) return;
+      this.addScore(enemy.xpValue || 10);
       this.spawnXPOrb(enemy.x, enemy.y, enemy.xpValue);
     });
 
@@ -363,6 +379,15 @@ export default class MainScene extends Phaser.Scene {
     this.timerText.setText(
       `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
     );
+
+    if (remaining <= 0) {
+      this.handleRunEnd("Tempo esgotado!");
+    }
+  }
+
+  addScore(points) {
+    this.score += Math.max(0, Math.floor(points || 0));
+    this.scoreText?.setText(`Pontos: ${this.score}`);
   }
 
   getClosestEnemy(maxRange = Infinity) {
@@ -445,6 +470,10 @@ export default class MainScene extends Phaser.Scene {
   }
 
   handlePlayerDeath() {
+    this.player.setTint?.(0x000000);
+    this.handleRunEnd("GAME OVER", "#ff0000");
+    return;
+
     this.physics.pause();
 
     this.player.setTint?.(0x000000);
@@ -465,6 +494,73 @@ export default class MainScene extends Phaser.Scene {
       .setScrollFactor(0);
 
     this.time.delayedCall(3000, () => this.scene.start("MenuScene"));
+  }
+
+  async saveCurrentRanking() {
+    if (this.rankingSaved) return true;
+    if (this.rankingSavePromise) return this.rankingSavePromise;
+
+    this.rankingSavePromise = (async () => {
+      try {
+        const saved = await saveBestRanking({
+          pontuacao: this.score || 0,
+          level: this.player?.level || 1
+        });
+
+        this.rankingSaved = saved;
+        return saved;
+      } catch (error) {
+        console.warn("Erro ao salvar ranking:", error);
+        return false;
+      } finally {
+        this.rankingSavePromise = null;
+      }
+    })();
+
+    return this.rankingSavePromise;
+  }
+
+  handleRunEnd(message, color = "#00ffff") {
+    if (this.runEnded) return;
+    this.runEnded = true;
+
+    this.physics.pause();
+    this.saveCurrentRanking();
+
+    this.add.text(
+      this.scale.width / 2,
+      this.scale.height / 2,
+      message,
+      {
+        fontSize: "48px",
+        fill: color,
+        fontStyle: "bold",
+        stroke: "#000",
+        strokeThickness: 6
+      }
+    )
+      .setOrigin(0.5)
+      .setScrollFactor(0);
+
+    this.add.text(
+      this.scale.width / 2,
+      this.scale.height / 2 + 56,
+      `Pontos: ${this.score || 0}  |  Level: ${this.player?.level || 1}`,
+      {
+        fontSize: "24px",
+        fill: "#ffffff",
+        fontStyle: "bold",
+        stroke: "#000",
+        strokeThickness: 4
+      }
+    )
+      .setOrigin(0.5)
+      .setScrollFactor(0);
+
+    this.time.delayedCall(3000, async () => {
+      await this.saveCurrentRanking();
+      this.scene.start("MenuScene");
+    });
   }
 
   spawnXPOrb(x, y, value) {
