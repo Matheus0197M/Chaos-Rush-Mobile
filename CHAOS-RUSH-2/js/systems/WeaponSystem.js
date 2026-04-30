@@ -26,6 +26,33 @@ export default class WeaponSystem {
     this.cooldowns = {};
   }
 
+  getStat(key, fallback = 0) {
+    if (typeof this.player?.getStat === "function") {
+      return this.player.getStat(key, fallback);
+    }
+
+    if (typeof this.player?.stats?.get === "function") {
+      return this.player.stats.get(key, fallback);
+    }
+
+    return this.player?.[key] ?? fallback;
+  }
+
+  getCooldownDuration(ms) {
+    const globalCD = Math.max(0.1, this.getStat("globalCD", 1));
+    const attackSpeed = Math.max(0.1, this.getStat("attackSpeed", 1));
+    return Math.max(50, ms * globalCD / attackSpeed);
+  }
+
+  dealDamage(enemy, baseDamage) {
+    if (this.player?.damageSystem?.dealDamageToEnemy) {
+      return this.player.damageSystem.dealDamageToEnemy(enemy, baseDamage);
+    }
+
+    enemy?.takeDamage?.(baseDamage * this.getStat("damage", 1));
+    return null;
+  }
+
   useWeapon(key) {
     if (!this.player.canAttack) return;
 
@@ -49,7 +76,7 @@ export default class WeaponSystem {
 
   startCooldown(key, ms) {
     this.cooldowns[key] = true;
-    this.scene.time.delayedCall(ms, () => {
+    this.scene.time.delayedCall(this.getCooldownDuration(ms), () => {
       this.cooldowns[key] = false;
     });
   }
@@ -64,7 +91,11 @@ export default class WeaponSystem {
     const scene = this.scene;
     const p = this.player;
 
-    const target = scene.getClosestEnemy(450);
+    const aoeMultiplier = this.getStat("aoe", 1);
+    const projectileSpeed = this.getStat("projectileSpeed", 1);
+    const pierce = Math.max(0, Math.floor(this.getStat("pierce", 0)));
+
+    const target = scene.getClosestEnemy(450 * aoeMultiplier);
     if (!target) return;
 
     // verifica textura antes de criar
@@ -80,10 +111,10 @@ export default class WeaponSystem {
     // bônus de área apenas para slow
     const slowRadiusBonus =
       chosenEffect === "slow"
-        ? (this.player.slowRadiusBonus || 30)
+        ? this.getStat("slowRadiusBonus", 0)
         : 0;
 
-    const finalRadius = FRASCO_CONFIG.AREA_RADIUS + slowRadiusBonus;
+    const finalRadius = (FRASCO_CONFIG.AREA_RADIUS + slowRadiusBonus) * aoeMultiplier;
 
     // calcula ângulo até o inimigo
     const baseAngle = Phaser.Math.Angle.Between(
@@ -105,11 +136,13 @@ export default class WeaponSystem {
 
     // guarda o efeito no objeto
     flask.effect = chosenEffect;
+    flask.pierceLeft = pierce;
+    flask.hitEnemies = new Set();
 
     // aplica velocidade
     scene.physics.velocityFromRotation(
       finalAngle,
-      FRASCO_CONFIG.VELOCITY,
+      FRASCO_CONFIG.VELOCITY * projectileSpeed,
       flask.body.velocity
     );
 
@@ -125,7 +158,10 @@ export default class WeaponSystem {
       scene.enemies,
       (f, enemy) => {
 
-        if (!f.active) return;
+        if (!f.active || !enemy || !enemy.active || enemy.isDead) return;
+        if (f.hitEnemies.has(enemy)) return;
+
+        f.hitEnemies.add(enemy);
 
         this._createGroundEffect(
           f.x,
@@ -148,9 +184,12 @@ export default class WeaponSystem {
           onComplete: () => hit.destroy()
         });
 
-        f.destroy();
+        if (f.pierceLeft > 0) {
+          f.pierceLeft--;
+          return;
+        }
 
-        // remove collider para evitar leak
+        f.destroy();
         scene.physics.world.removeCollider(collider);
       }
     );
@@ -163,7 +202,7 @@ export default class WeaponSystem {
     const radiusMul = options.radiusMul || 1;
     const finalRadius = (radius || FRASCO_CONFIG.AREA_RADIUS) * radiusMul;
 
-    const durationMultiplier = this.player.debuffDurationMultiplier || 1;
+    const durationMultiplier = this.getStat("debuffDurationMultiplier", 1);
     const totalTicks = lifetime
       ? Math.ceil(lifetime / FRASCO_CONFIG.AREA_TICK_RATE)
       : Math.ceil(FRASCO_CONFIG.BASE_TICKS * durationMultiplier);
@@ -310,18 +349,18 @@ export default class WeaponSystem {
 
   _applyFlaskDebuff(enemy, effect) {
     const scene = this.scene;
-    const baseDotDamage = 10 * (this.player.dotDamageBonus || 3);
+    const baseDotDamage = 10 * (1 + this.getStat("dotDamageBonus", 0));
 
     switch (effect) {
       case "fire":
-        enemy.takeDamage(baseDotDamage * 1.5);
+        this.dealDamage(enemy, baseDotDamage * 1.5);
         break;
       case "poison":
-        enemy.takeDamage(baseDotDamage + 2);
+        this.dealDamage(enemy, baseDotDamage + 2);
         break;
       case "slow":
         // small damage tick for slow, mostly slows the enemy
-        enemy.takeDamage(Math.max(1, Math.floor(baseDotDamage * 0.1)));
+        this.dealDamage(enemy, Math.max(1, Math.floor(baseDotDamage * 0.1)));
 
         if (enemy.speed == null && enemy.body && enemy.body.velocity) {
           // try to infer a speed property if missing
@@ -388,7 +427,7 @@ export default class WeaponSystem {
     if (foice.body.setSize) foice.body.setSize(24, 24);
     foice.body.isSensor = true;
 
-    const SPEED = 420;
+    const SPEED = 420 * this.getStat("projectileSpeed", 1);
     foice.isControlling = true;
 
     let aimOffset = Phaser.Math.FloatBetween(-0.12, 0.12);
@@ -396,7 +435,7 @@ export default class WeaponSystem {
     const updateFoice = () => {
       if (!foice.isControlling || !foice.active) return;
 
-      const target = scene.getClosestEnemy(450);
+      const target = scene.getClosestEnemy(450 * this.getStat("aoe", 1));
       if (!target) {
         foice.body.setVelocity(0, 0);
         return;
@@ -433,10 +472,10 @@ export default class WeaponSystem {
 
       const damage =
         5 *
-        (player.dotDamageBonus || 1) *
+        (1 + this.getStat("dotDamageBonus", 0)) *
         (player.extraVenomBonus || 1) *
         damageMultiplier;
-      enemy.takeDamage(damage);
+      this.dealDamage(enemy, damage);
       enemy.isMarked = true;
 
       // Adiciona marcador visual acima do inimigo
@@ -501,7 +540,7 @@ export default class WeaponSystem {
               return;
             }
 
-            enemy.takeDamage(5 * (player.dotDamageBonus || 1));
+            this.dealDamage(enemy, 5 * (1 + this.getStat("dotDamageBonus", 0)));
             if (enemy.setTint) enemy.setTint(0x4d7d47);
             scene.time.delayedCall(120, () => {
               if (enemy && enemy.active && enemy.clearTint) enemy.clearTint();
@@ -545,17 +584,17 @@ export default class WeaponSystem {
   _useBell() {
     const scene = this.scene;
     const p = this.player;
-    const radius = 120;
+    const radius = 120 * this.getStat("aoe", 1);
     const wave = scene.add.circle(p.x, p.y, radius, 0x66ccff, 0.18).setDepth(4);
     scene.enemies.children.iterate((e) => {
       if (!e || !e.active) return;
       const d = Phaser.Math.Distance.Between(e.x, e.y, p.x, p.y);
       if (d <= radius) {
         const angle = Phaser.Math.Angle.Between(p.x, p.y, e.x, e.y);
-        const kb = 300 * (p.knockbackBonus || 1);
+        const kb = 300 * this.getStat("knockback", 1);
         scene.physics.velocityFromRotation(angle, kb, e.body.velocity);
         const extra = p.extraDamageOnPush || 0;
-        e.takeDamage(12 + extra);
+        this.dealDamage(e, 12 + extra);
         scene.events.emit("enemyPushed", e);
       }
     });

@@ -43,8 +43,8 @@ export default class StatsPlayer {
   }
 
   // GETTER UNIVERSAL
-  get(key) {
-    return this.stats[key];
+  get(key, fallback = 0) {
+    return this.stats[key] ?? fallback;
   }
 
   get movementSpeed() {
@@ -61,22 +61,22 @@ export default class StatsPlayer {
 
   // +FLAT
   addFlat(key, amount) {
-    const old = this.stats[key];
-    this.stats[key] += amount;
+    const old = this.get(key, 0);
+    this.stats[key] = old + amount;
     this._emitChange(key, this.stats[key], old);
   }
 
   // +%
   addPercent(key, percent) {
-    const old = this.stats[key];
-    this.stats[key] *= (1 + percent);
+    const old = this.get(key, 1);
+    this.stats[key] = old * (1 + percent);
     this._emitChange(key, this.stats[key], old);
   }
 
   // *MULT
   multiply(key, factor) {
-    const old = this.stats[key];
-    this.stats[key] *= factor;
+    const old = this.get(key, 1);
+    this.stats[key] = old * factor;
     this._emitChange(key, this.stats[key], old);
   }
 

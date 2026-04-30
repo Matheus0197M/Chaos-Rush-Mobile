@@ -72,7 +72,11 @@ export default class XPOrb extends Phaser.Physics.Arcade.Sprite {
         const autoCollectDistance = 18;
         if (dist <= autoCollectDistance) {
           // chama collect diretamente (proteções internas do collect impedem duplicação)
-          this.collect(player);
+          if (typeof this.scene.handleXPCollect === "function") {
+            this.scene.handleXPCollect(player, this);
+          } else {
+            this.collect(player);
+          }
         }
 
       } else {

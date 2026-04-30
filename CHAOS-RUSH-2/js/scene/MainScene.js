@@ -244,8 +244,9 @@ export default class MainScene extends Phaser.Scene {
 
     // ===== ARMA INICIAL =====
     if (classConfig.weaponKey) {
+      this.baseWeaponLoopDelay = 1200;
       this.weaponLoopEvent = this.time.addEvent({
-        delay: 1200,
+        delay: this.baseWeaponLoopDelay,
         loop: true,
         callback: () => {
           this.weaponSystem.useWeapon(classConfig.weaponKey);
@@ -419,7 +420,9 @@ export default class MainScene extends Phaser.Scene {
   processAuraDamage() {
     this.enemiesInAura.forEach(enemy => {
       if (enemy && enemy.active) {
-        if (typeof enemy.takeDamage === "function") {
+        if (this.player.damageSystem?.dealDamageToEnemy) {
+          this.player.damageSystem.dealDamageToEnemy(enemy, this.player.baseDamage || 10);
+        } else if (typeof enemy.takeDamage === "function") {
           enemy.takeDamage(this.player.baseDamage || 10);
         } else if (enemy.currentHP !== undefined) {
           enemy.currentHP -= (this.player.baseDamage || 10);
@@ -436,12 +439,13 @@ export default class MainScene extends Phaser.Scene {
     orb.collected = true;
 
     const xpValue = orb.value || 10;
+    let gainedXP = xpValue;
+
     if (this.player.gainXP) {
-      const multiplier = this.player.xpGain || 1;
-      this.player.gainXP(Math.floor(xpValue * multiplier));
+      gainedXP = this.player.gainXP(xpValue);
     }
 
-    this.showXPText(orb.x, orb.y, `+${xpValue} XP`);
+    this.showXPText(orb.x, orb.y, `+${gainedXP} XP`);
     this.events.emit("pickupXP", orb);
 
     if (typeof orb.collect === "function") {

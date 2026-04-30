@@ -252,7 +252,11 @@ export default class PassiveAlquimista {
       if (!e.active) return;
       const d = Phaser.Math.Distance.Between(e.x, e.y, x, y);
       if (d <= radius) {
-        e.takeDamage(dmg, { isCrit: true });
+        if (this.player.damageSystem?.dealDamageToEnemy) {
+          this.player.damageSystem.dealDamageToEnemy(e, dmg, { forceCrit: true });
+        } else {
+          e.takeDamage(dmg, { isCrit: true });
+        }
         this.applyBasicPoison(e);
         this.applyBasicSlow(e);
       }
@@ -304,7 +308,9 @@ export default class PassiveAlquimista {
       repeat: 3,
       callback: () => {
         if (!enemy.active) loop.remove();
-        else enemy.takeDamage(dmg);
+        else if (this.player.damageSystem?.dealDamageToEnemy) {
+          this.player.damageSystem.dealDamageToEnemy(enemy, dmg);
+        } else enemy.takeDamage(dmg);
       },
     });
 

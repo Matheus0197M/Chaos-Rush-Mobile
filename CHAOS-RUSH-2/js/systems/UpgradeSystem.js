@@ -1,182 +1,112 @@
 export default class UpgradeSystem {
   constructor(scene) {
     this.scene = scene;
-
     this.isMenuOpen = false;
     this.menuContainer = null;
 
     if (!scene) {
-      console.error("upgradeSystem iniciado com sucesso!");
+      console.error("UpgradeSystem criado sem scene.");
     }
-    this.upgrades = [
 
-      // 💥 DANO
+    this.upgrades = [
       {
         id: "damage_up_1",
         name: "Dano +20%",
         desc: "Aumenta o dano causado.",
-        apply: (player) => {
-          player.stats.multiply("damage", 1.2);
-        },
+        apply: (player) => player.stats.multiply("damage", 1.2),
       },
-
       {
         id: "damage_up_2",
         name: "Dano +35%",
-        desc: "Aumenta significativamente o dano.",
-        apply: (player) => {
-          player.stats.multiply("damage", 1.35);
-        },
+        desc: "Aumenta bastante o dano causado.",
+        apply: (player) => player.stats.multiply("damage", 1.35),
       },
-
-      // ⚡ VELOCIDADE DE ATAQUE
       {
         id: "attack_speed",
         name: "Atk Speed +15%",
-        desc: "Ataca mais rápido.",
-        apply: (player) => {
-          player.stats.multiply("attackSpeed", 1.15);
-
-          // 🔥 APLICA DIRETO NO LOOP (IMPORTANTE)
-          if (player.scene.weaponLoopEvent) {
-            player.scene.weaponLoopEvent.delay = Math.max(
-              50,
-              player.scene.weaponLoopEvent.delay / 1.15
-            );
-          }
-        },
+        desc: "Ataca mais rapido.",
+        apply: (player) => player.stats.multiply("attackSpeed", 1.15),
       },
-
-      // ❤️ VIDA
       {
         id: "max_hp_1",
-        name: "Vida Máxima +20%",
-        desc: "Aumenta a vida máxima.",
+        name: "Vida Maxima +20%",
+        desc: "Aumenta a vida maxima.",
         apply: (player) => {
+          const oldMaxHP = player.maxHP;
+
           player.stats.multiply("maxHP", 1.2);
+          player.syncStats?.();
 
-          player.currentHP = Math.min(
-            player.currentHP,
-            player.stats.get("maxHP")
-          );
-
-          player.scene?.updateHealthBar?.();
+          const gainedMaxHP = Math.max(0, player.maxHP - oldMaxHP);
+          player.currentHP = Math.min(player.maxHP, player.currentHP + gainedMaxHP);
         },
       },
-
-      // 💚 REGEN
       {
         id: "regen_hp",
-        name: "Regeneração",
+        name: "Regeneracao",
         desc: "Recupera 2 HP por segundo.",
         apply: (player) => {
-          if (!player.regenEvent) {
-            player.regenEvent = player.scene.time.addEvent({
-              delay: 1000,
-              loop: true,
-              callback: () => {
-                player.currentHP = Math.min(
-                  player.stats.get("maxHP"),
-                  player.currentHP + 2
-                );
+          if (player.regenEvent) return;
 
-                player.scene?.updateHealthBar?.();
-              },
-            });
-          }
+          player.regenEvent = player.scene.time.addEvent({
+            delay: 1000,
+            loop: true,
+            callback: () => {
+              player.heal?.(2);
+            },
+          });
         },
       },
-
-      // 🏃 VELOCIDADE
       {
         id: "move_speed",
         name: "Velocidade +15%",
-        desc: "Move mais rápido.",
-        apply: (player) => {
-          player.stats.multiply("moveSpeedMultiplier", 1.15);
-        },
+        desc: "Move mais rapido.",
+        apply: (player) => player.stats.multiply("moveSpeedMultiplier", 1.15),
       },
-
-      // 🧲 PICKUP
       {
         id: "pickup_range",
         name: "Pickup +50%",
         desc: "Coleta XP de mais longe.",
-        apply: (player) => {
-          player.stats.multiply("pickupRadius", 1.5);
-        },
+        apply: (player) => player.stats.multiply("pickupRadius", 1.5),
       },
-
-      // 🎯 CRÍTICO
       {
         id: "crit_chance",
-        name: "Crítico +10%",
-        desc: "Chance de crítico.",
-        apply: (player) => {
-
-          if (isCrit) {
-            const circle = this.scene.add.cirle(this.x, this.y, 30, 0xffd700, 0.3);
-
-            this.scene.tweens.add({
-              targets: circle,
-              scale: 2,
-              alpha: 0,
-              duration: 300,
-              onComplete: () => circle.destroy()
-            });
-          }
-
-          player.stats.addFlat("critChance", 0.1);
-        },
+        name: "Critico +10%",
+        desc: "Aumenta a chance de critico.",
+        apply: (player) => player.stats.addFlat("critChance", 0.1),
       },
-
       {
         id: "crit_damage",
-        name: "Dano Crítico +50%",
-        desc: "Mais dano crítico.",
-        apply: (player) => {
-          player.stats.addFlat("critDamage", 0.5);
-        },
+        name: "Dano Critico +50%",
+        desc: "Aumenta o dano critico.",
+        apply: (player) => player.stats.addFlat("critDamage", 0.5),
       },
-
-      // 🚀 PROJÉTEIS
       {
         id: "projectile_speed",
-        name: "Projéteis +20%",
-        desc: "Mais velocidade.",
-        apply: (player) => {
-          player.stats.multiply("projectileSpeed", 1.2);
-        },
+        name: "Projeteis +20%",
+        desc: "Projeteis ficam mais rapidos.",
+        apply: (player) => player.stats.multiply("projectileSpeed", 1.2),
       },
-
       {
         id: "projectile_pierce",
-        name: "Perfuração +1",
-        desc: "Atravessa inimigos.",
-        apply: (player) => {
-          player.stats.addFlat("pierce", 1);
-        },
+        name: "Perfuracao +1",
+        desc: "Projeteis atravessam mais inimigos.",
+        apply: (player) => player.stats.addFlat("pierce", 1),
       },
-
-      // 🛡️ DEFESA
       {
         id: "armor",
         name: "Armadura +2",
         desc: "Reduz dano recebido.",
-        apply: (player) => {
-          player.stats.addFlat("armor", 2);
-        },
+        apply: (player) => player.stats.addFlat("armor", 2),
       },
-
       {
         id: "shield",
         name: "Escudo +50",
-        desc: "Absorve dano.",
+        desc: "Absorve dano recebido.",
         apply: (player) => {
-          player.stats.addFlat("shield", 50);
+          player.refillShield?.(50);
 
           const circle = player.scene.add.circle(player.x, player.y, 40, 0x4da6ff, 0.3);
-
           player.scene.tweens.add({
             targets: circle,
             scale: 1.5,
@@ -184,73 +114,47 @@ export default class UpgradeSystem {
             duration: 400,
             onComplete: () => circle.destroy()
           });
-
-          player.scene?.updateHealthBar?.();
         },
       },
-
-      // 💥 COMBATE
       {
         id: "knockback",
         name: "Knockback +40%",
-        desc: "Empurra inimigos.",
-        apply: (player) => {
-          player.stats.multiply("knockback", 1.4);
-        },
+        desc: "Empurra inimigos com mais forca.",
+        apply: (player) => player.stats.multiply("knockback", 1.4),
       },
-
       {
         id: "aoe",
-        name: "Área +25%",
-        desc: "Aumenta alcance.",
-        apply: (player) => {
-          player.stats.multiply("aoe", 1.25);
-        },
+        name: "Area +25%",
+        desc: "Aumenta alcance e area.",
+        apply: (player) => player.stats.multiply("aoe", 1.25),
       },
-
       {
         id: "cooldown_global",
         name: "Cooldown -10%",
-        desc: "Recarga mais rápida.",
-        apply: (player) => {
-          player.stats.multiply("globalCD", 4);
-        },
+        desc: "Recarga mais rapido.",
+        apply: (player) => player.stats.multiply("globalCD", 0.9),
       },
-
-      // ⭐ PROGRESSÃO
       {
         id: "xp_gain",
         name: "XP +20%",
-        desc: "Mais experiência.",
-        apply: (player) => {
-          player.stats.multiply("xpGain", 1.2);
-        },
+        desc: "Recebe mais experiencia.",
+        apply: (player) => player.stats.multiply("xpGain", 1.2),
       },
-
-      // 🧛 LIFESTEAL
       {
         id: "lifesteal",
         name: "Lifesteal 3%",
-        desc: "Recupera vida ao atacar.",
-        apply: (player) => {
-          player.stats.addFlat("lifesteal", 0.03);
-        },
+        desc: "Recupera vida ao causar dano.",
+        apply: (player) => player.stats.addFlat("lifesteal", 0.03),
       },
-
-      // ⚡ ESPECIAL
       {
         id: "double_hit",
         name: "Golpe Duplo",
         desc: "Chance de atacar duas vezes.",
-        apply: (player) => {
-          player.stats.addFlat("doubleHit", 0.1);
-        },
+        apply: (player) => player.stats.addFlat("doubleHit", 0.1),
       },
-
     ];
   }
 
-  // -------------------------------------
   openUpgradeMenu() {
     if (this.isMenuOpen) return;
     this.isMenuOpen = true;
@@ -292,8 +196,7 @@ export default class UpgradeSystem {
     this.menuContainer.add(title);
 
     const options = Phaser.Utils.Array.Shuffle(this.upgrades).slice(0, 3);
-
-    let startX = cx - 280;
+    const startX = cx - 280;
 
     options.forEach((upg, i) => {
       const card = this.scene.add
@@ -326,9 +229,7 @@ export default class UpgradeSystem {
         align: "center"
       }).setOrigin(0.5);
 
-      card.on("pointerdown", () => {
-        this.applyUpgrade(upg);
-      });
+      card.on("pointerdown", () => this.applyUpgrade(upg));
 
       this.menuContainer.add(card);
       this.menuContainer.add(name);
@@ -337,40 +238,43 @@ export default class UpgradeSystem {
   }
 
   applyUpgrade(upgrade) {
-    const player = this.scene.player; // ✅ PRIMEIRO
-
+    const player = this.scene.player;
     if (!player) return;
 
     try {
       upgrade.apply(player);
-
+      this.syncPlayerAfterUpgrade(player);
       console.log("UPGRADE:", upgrade.id, player.stats.stats);
-
     } catch (e) {
       console.error("Upgrade error:", e);
+      return;
     }
 
-    // 🔥 sincronização
-    if (player.stats) {
-      player.magnetRadius = (player.stats.get("pickupRadius") || 1) * 100;
-      player.speed = player.stats.movementSpeed;
-      player.xpGain = player.stats.get("xpGain");
-    }
-
-    // ✨ efeito visual (SE você já adicionou)
     if (this.scene?.createFloatingText) {
-      const px = player.x;
-      const py = player.y - 50;
-
       this.scene.createFloatingText(
-        px,
-        py,
+        player.x,
+        player.y - 50,
         `+${upgrade.name}`,
         this.getUpgradeColor(upgrade.id)
       );
     }
 
     this.closeMenu();
+  }
+
+  syncPlayerAfterUpgrade(player) {
+    player.syncStats?.();
+
+    const baseDelay = this.scene.baseWeaponLoopDelay || 1200;
+    const attackSpeed = Math.max(0.1, player.getStat?.("attackSpeed", 1) ?? 1);
+    const globalCD = Math.max(0.1, player.getStat?.("globalCD", 1) ?? 1);
+
+    if (this.scene.weaponLoopEvent) {
+      this.scene.weaponLoopEvent.delay = Math.max(50, baseDelay * globalCD / attackSpeed);
+    }
+
+    player.scene?.updateHealthBar?.();
+    player.scene?.updateXpBar?.();
   }
 
   closeMenu() {
@@ -387,12 +291,12 @@ export default class UpgradeSystem {
   }
 
   getUpgradeColor(id) {
-    if (id.includes("damage")) return "#ff4d4"; //vermelho
-    if (id.includes("crit")) return "#ffd700"; // dourado
-    if (id.includes("armor") || id.includes("shield")) return "#4da6ff"; // azul
-    if (id.includes("speed")) return "#00ffcc"; // ciano
-    if (id.includes("xp")) return "#a64dff"; // roxo
-    if (id.includes("lifesteal")) return "#ff66cc"; // rosa
+    if (id.includes("damage")) return "#ff4d4d";
+    if (id.includes("crit")) return "#ffd700";
+    if (id.includes("armor") || id.includes("shield")) return "#4da6ff";
+    if (id.includes("speed")) return "#00ffcc";
+    if (id.includes("xp")) return "#a64dff";
+    if (id.includes("lifesteal")) return "#ff66cc";
 
     return "#ffffff";
   }

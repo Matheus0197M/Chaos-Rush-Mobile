@@ -44,17 +44,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     this.xp = 0;
     this.xpToNext = 100;
 
-    this.maxHP = this.stats.maxHP || 100;
+    this.maxHP = this.getStat("maxHP", 100);
     this.currentHP = this.maxHP;
 
-    this.baseDamage = this.stats.baseDamage || 5;
+    this.baseDamage = 5;
 
-    this.magnetRadius =
-      (typeof this.stats.get === "function"
-        ? this.stats.get("pickupRadius") || 1
-        : this.stats.pickupRadius || 1) * 100;
-
-    this.xpGain = this.stats.xpGain || 1;
+    this.syncStats();
 
     // INPUTS
     this.keys = scene.input.keyboard.addKeys({
@@ -78,6 +73,34 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   // SISTEMA PRINCIPAL
+
+  getStat(key, fallback = 0) {
+    if (typeof this.stats?.get === "function") {
+      return this.stats.get(key, fallback);
+    }
+
+    return this.stats?.[key] ?? fallback;
+  }
+
+  syncStats() {
+    this.maxHP = this.getStat("maxHP", this.maxHP || 100);
+    this.currentHP = Phaser.Math.Clamp(this.currentHP ?? this.maxHP, 0, this.maxHP);
+
+    this.speed = this.stats?.movementSpeed ?? this.speedBase;
+    this.magnetRadius = this.getStat("pickupRadius", 1) * 100;
+    this.xpGain = this.getStat("xpGain", 1);
+
+    this.attackSpeed = this.getStat("attackSpeed", 1);
+    this.globalCD = this.getStat("globalCD", 1);
+    this.projectileSpeed = this.getStat("projectileSpeed", 1);
+    this.pierce = this.getStat("pierce", 0);
+    this.aoe = this.getStat("aoe", 1);
+    this.knockbackBonus = this.getStat("knockback", 1);
+    this.dotDamageBonus = 1 + this.getStat("dotDamageBonus", 0);
+    this.debuffDurationMultiplier = this.getStat("debuffDurationMultiplier", 1);
+    this.slowRadiusBonus = this.getStat("slowRadiusBonus", 0);
+    this.auraRange = this.getStat("auraRange", 110);
+  }
 
   addSpeedModifier(name, mult) {
     this.speedModifiers[name] = mult;
@@ -198,6 +221,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     while (this.xp >= this.xpToNext) {
       this.levelUp();
     }
+
+    return final;
   }
 
   levelUp() {
@@ -205,9 +230,10 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     this.xp -= this.xpToNext;
     this.xpToNext = Math.floor(this.xpToNext * 1.25);
 
-    this.maxHP += 10;
-    this.currentHP = this.maxHP;
+    this.stats.addFlat("maxHP", 10);
     this.baseDamage += 1;
+    this.syncStats();
+    this.currentHP = this.maxHP;
 
     this.scene?.updateHealthBar?.();
     this.scene?.updateXpBar?.();

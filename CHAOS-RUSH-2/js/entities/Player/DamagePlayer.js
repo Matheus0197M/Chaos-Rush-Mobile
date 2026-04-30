@@ -3,23 +3,38 @@ export default class DamagePlayer {
         this.player = player;
         this.stats = stats;
 
-        const maxHP = (typeof stats.get === "function") ? (stats.get("maxHP") || 1000) : (stats.maxHP || 100);
+        const maxHP = this.getStat("maxHP", 100);
         if (typeof this.player.currentHP !== "number") {
             this.player.currentHP = maxHP;
         }
     }
 
+    getStat(key, fallback = 0) {
+        if (typeof this.stats?.get === "function") {
+            return this.stats.get(key, fallback);
+        }
+
+        return this.stats?.[key] ?? fallback;
+    }
+
+    setStat(key, value) {
+        if (typeof this.stats?.set === "function") {
+            this.stats.set(key, value);
+            return;
+        }
+
+        if (this.stats) this.stats[key] = value;
+    }
+
     takeDamage(amount) {
         let dmg = amount;
 
-        // ===== ESCUDO =====
-        let shield = this.stats.shield;
+        let shield = this.getStat("shield", 0);
         if (shield > 0) {
             const absorbed = Math.min(shield, dmg);
             shield -= absorbed;
             dmg -= absorbed;
-
-            this.stats.shield = shield;
+            this.setStat("shield", shield);
 
             if (dmg <= 0) {
                 this.player.scene.updateHealthBar?.();
@@ -27,15 +42,10 @@ export default class DamagePlayer {
             }
         }
 
-        // ===== ARMADURA =====
-        const armor = this.stats.armor || 0;
-        dmg -= armor;
+        const armor = this.getStat("armor", 0);
+        dmg = Math.max(1, dmg - armor);
 
-        if (dmg < 1) dmg = 1;
-
-        // ===== APLICA DANO =====
         this.player.currentHP -= dmg;
-
         this.player.scene.cameras?.main?.shake(100, 0.005);
 
         if (this.player.currentHP <= 0) {
@@ -46,33 +56,20 @@ export default class DamagePlayer {
         this.player.scene.updateHealthBar?.();
     }
 
-    calculateDamage(baseDamage = 1) {
-        let dmg = baseDamage;
+    calculateDamage(baseDamage = 1, options = {}) {
+        let dmg = baseDamage * this.getStat("damage", 1);
 
-        // ========= CRÍTICO =========
-        const critChance = this.stats.critChance;
-        const critDmg = this.stats.critDamage;
+        const critChance = this.getStat("critChance", 0);
+        const critDmg = this.getStat("critDamage", 1.5);
 
         let isCrit = false;
-
-        if (Math.random() < critChance) {
+        if (options.forceCrit || options.isCrit || Math.random() < critChance) {
             dmg *= critDmg;
             isCrit = true;
         }
 
-        //doble hit
-
-        const doubleHitChance = this.stats.doubleHit;
+        const doubleHitChance = this.getStat("doubleHit", 0);
         const hits = Math.random() < doubleHitChance ? 2 : 1;
-
-
-        // life steal
-        
-        const lifesteal = this.stats.lifesteal;
-        if (lifesteal > 0) {
-            const healAmount = dmg * lifesteal;
-            this.player.heal(healAmount);
-        }
 
         return {
             damage: dmg,
@@ -82,18 +79,26 @@ export default class DamagePlayer {
     }
 
     getKnockback(force) {
-        const knockMod = this.stats.knockback || 1;
-        return force * knockMod;
+        return force * this.getStat("knockback", 1);
     }
 
-    dealDamageToEnemy(enemy, baseDamage = 1) {
-        const info = this.calculateDamage(baseDamage);
+    dealDamageToEnemy(enemy, baseDamage = 1, options = {}) {
+        if (!enemy || !enemy.active || enemy.isDead) return null;
 
-        for ( let i = 0; i < info.hits; i++) {
+        const info = this.calculateDamage(baseDamage, options);
+        const lifesteal = this.getStat("lifesteal", 0);
+
+        for (let i = 0; i < info.hits; i++) {
             this.player.scene.time.delayedCall(i * 50, () => {
+                if (!enemy || !enemy.active || enemy.isDead) return;
+
                 enemy.takeDamage(info.damage, {
                     isCrit: info.isCrit
                 });
+
+                if (lifesteal > 0) {
+                    this.heal(info.damage * lifesteal);
+                }
 
                 if (enemy.applyKnockback) {
                     enemy.applyKnockback(this.getKnockback(50));
@@ -106,8 +111,24 @@ export default class DamagePlayer {
 
             this.player.scene.time.delayedCall(50, () => {
                 this.player.scene.time.timeScale = 1;
-            })
+            });
         }
+
         return info;
+    }
+
+    heal(amount) {
+        if (!amount || amount <= 0) return;
+
+        const maxHP = this.player.maxHP ?? this.getStat("maxHP", 100);
+        this.player.currentHP = Math.min(maxHP, this.player.currentHP + amount);
+        this.player.scene.updateHealthBar?.();
+    }
+
+    addShield(amount) {
+        if (!amount || amount <= 0) return;
+
+        this.setStat("shield", this.getStat("shield", 0) + amount);
+        this.player.scene.updateHealthBar?.();
     }
 }
