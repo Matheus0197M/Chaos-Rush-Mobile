@@ -157,6 +157,8 @@ export default class MainScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(1000);
 
+    this.createHordeWarningHud();
+
     // ===== INPUT =====
     this.spaceKey = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.SPACE
@@ -625,26 +627,98 @@ export default class MainScene extends Phaser.Scene {
     });
   }
 
-  showHordeWarning() {
-    this.hordeText.setAlpha(1);
-    this.hordeText.setScale(0.8);
+  getHordeWarningWidth() {
+    const availableWidth = Math.max(220, this.scale.width - 32);
+    return Math.min(360, availableWidth);
+  }
+
+  createHordeWarningHud() {
+    const warningWidth = this.getHordeWarningWidth();
+
+    this.hordeWarningContainer = this.add
+      .container(this.scale.width / 2, 112)
+      .setScrollFactor(0)
+      .setDepth(2000)
+      .setAlpha(0)
+      .setVisible(false);
+
+    this.hordeWarningBg = this.add
+      .rectangle(0, 0, warningWidth, 56, 0x210000, 0.88)
+      .setStrokeStyle(2, 0xff4d00, 1);
+
+    this.hordeText = this.add.text(0, -8, "NOVA HORDA!", {
+      fontSize: "24px",
+      fill: "#fff1d6",
+      fontStyle: "bold",
+      stroke: "#000",
+      strokeThickness: 5,
+      align: "center"
+    }).setOrigin(0.5);
+
+    this.hordeSubText = this.add.text(0, 17, "Inimigos chegando!", {
+      fontSize: "12px",
+      fill: "#ffb06a",
+      fontStyle: "bold",
+      stroke: "#000",
+      strokeThickness: 3,
+      align: "center"
+    }).setOrigin(0.5);
+
+    this.hordeWarningContainer.add([
+      this.hordeWarningBg,
+      this.hordeText,
+      this.hordeSubText
+    ]);
+
+    this.scale.on("resize", this.positionHordeWarning, this);
+    this.events.once("shutdown", () => {
+      this.scale.off("resize", this.positionHordeWarning, this);
+    });
+  }
+
+  positionHordeWarning() {
+    if (!this.hordeWarningContainer) return;
+
+    const warningWidth = this.getHordeWarningWidth();
+    this.hordeWarningContainer.setPosition(this.scale.width / 2, 112);
+    this.hordeWarningBg?.setSize(warningWidth, 56);
+  }
+
+  showHordeWarning(message = "NOVA HORDA!", detail = "Inimigos chegando!") {
+    if (!this.hordeWarningContainer) this.createHordeWarningHud();
+    if (!this.hordeWarningContainer) return;
+
+    this.tweens.killTweensOf(this.hordeWarningContainer);
+    this.positionHordeWarning();
+
+    this.hordeText?.setText(message);
+    this.hordeSubText?.setText(detail);
+
+    this.hordeWarningContainer
+      .setVisible(true)
+      .setAlpha(1)
+      .setScale(0.9);
 
     this.tweens.add({
-      targets: this.hordeText,
-      scale: 1.1,
-      duration: 300,
+      targets: this.hordeWarningContainer,
+      scale: 1.08,
+      duration: 240,
       yoyo: true,
       repeat: 2,
+      ease: "Sine.easeInOut"
     });
 
     this.tweens.add({
-      targets: this.hordeText,
+      targets: this.hordeWarningContainer,
       alpha: 0,
-      delay: 2000,
+      delay: 2400,
       duration: 500,
+      ease: "Cubic.easeIn",
+      onComplete: () => {
+        this.hordeWarningContainer?.setVisible(false);
+      }
     });
 
-    // opcional: screen shake leve
     this.cameras.main.shake(200, 0.005);
   }
 
