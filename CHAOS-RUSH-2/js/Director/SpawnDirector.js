@@ -32,10 +32,17 @@ export default class SpawnDirector {
         this.event = {
             active: false,
             type: null,
-            timer: 0
+            timer: 0,
+            totalEnemies: 0,
+            spawnedEnemies: 0,
+            aliveEnemies: 0
         };
 
-        this.nextEventAt = 90;
+        this.hordeNumber = 0;
+        this.baseHordeSize = 18;
+        this.hordeSizeGrowth = 6;
+        this.hordeCooldown = 6;
+        this.nextEventAt = 3;
 
         //SPAWN
         this.spawnRadius = 450;
@@ -63,6 +70,9 @@ export default class SpawnDirector {
         this.updateUnlocks();
         this.updateEvents(dt);
 
+        if (!this.event.active || this.event.type !== "horde") return;
+        if (this.event.spawnedEnemies >= this.event.totalEnemies) return;
+
         const maxEnemies = this.getMaxEnemies();
         const alive = this.scene.enemies.countActive(true);
         if (alive >= maxEnemies) return;
@@ -73,9 +83,12 @@ export default class SpawnDirector {
             this.spawnAccumulator >= 1 &&
             time - this.lastSpawnTime >= this.spawnDelay
         ) {
-            this.spawnAccumulator -= 1;
-            this.lastSpawnTime = time;
-            this.spawnEnemyFromPool();
+            const spawned = this.spawnEnemyFromPool();
+
+            if (spawned) {
+                this.spawnAccumulator -= 1;
+                this.lastSpawnTime = time;
+            }
         }
     }
 
@@ -103,6 +116,10 @@ export default class SpawnDirector {
         }
 
         return max;
+    }
+
+    getHordeSize(hordeNumber = this.hordeNumber + 1) {
+        return this.baseHordeSize + (hordeNumber - 1) * this.hordeSizeGrowth;
     }
 
     // ===================================================
@@ -134,7 +151,7 @@ export default class SpawnDirector {
         const pos = this.getSpawnPosition();
         if (!pos) return;
 
-        this.spawnEnemy(type, pos.x, pos.y);
+        return this.spawnEnemy(type, pos.x, pos.y);
     }
 
     // ===================================================
@@ -147,7 +164,19 @@ export default class SpawnDirector {
 
         enemy.once("destroy", () => {
             this.activePerType[type]--;
+
+            if (enemy.hordeEnemy) {
+                this.event.aliveEnemies = Math.max(0, this.event.aliveEnemies - 1);
+            }
         });
+
+        if (this.event.active && this.event.type === "horde") {
+            enemy.hordeEnemy = true;
+            this.event.spawnedEnemies++;
+            this.event.aliveEnemies++;
+        }
+
+        return enemy;
     }
 
     // ===================================================
@@ -179,18 +208,33 @@ export default class SpawnDirector {
             this.startEvent("horde");
         }
 
-        if (this.event.active) {
-            this.event.timer -= dt;
-            if (this.event.timer <= 0) {
-                this.endEvent();
-            }
+        if (
+            this.event.active &&
+            this.event.type === "horde" &&
+            this.event.spawnedEnemies >= this.event.totalEnemies &&
+            this.event.aliveEnemies <= 0
+        ) {
+            this.endEvent();
         }
     }
 
     startEvent(type) {
         this.event.active = true;
         this.event.type = type;
-        this.event.timer = 18;
+        this.event.timer = 0;
+
+        if (type === "horde") {
+            this.hordeNumber++;
+            this.event.totalEnemies = this.getHordeSize(this.hordeNumber);
+            this.event.spawnedEnemies = 0;
+            this.event.aliveEnemies = 0;
+            this.spawnAccumulator = 0;
+
+            this.scene.showHordeWarning?.(
+                "NOVA HORDA!",
+                `Horda ${this.hordeNumber}: ${this.event.totalEnemies} inimigos`
+            );
+        }
 
         console.log("🔥 HORDE INICIADA");
     }
@@ -198,7 +242,16 @@ export default class SpawnDirector {
     endEvent() {
         this.event.active = false;
         this.event.type = null;
-        this.nextEventAt = this.elapsedTime + 90;
+        this.event.timer = 0;
+        this.event.totalEnemies = 0;
+        this.event.spawnedEnemies = 0;
+        this.event.aliveEnemies = 0;
+        this.nextEventAt = this.elapsedTime + this.hordeCooldown;
+
+        this.scene.showHordeWarning?.(
+            "NOVA HORDA EM BREVE",
+            `Proxima: ${this.getHordeSize(this.hordeNumber + 1)} inimigos`
+        );
 
         console.log("🕯️ Horde finalizada");
     }
