@@ -148,7 +148,7 @@ export default class PassiveAlquimista {
         },
       });
 
-      this._ringTimers.push({ ring, tweens });
+      this._ringTimers.push({ ring, tween: tweens });
     }
 
     const BlinkTimer = scene.time.addEvent({

@@ -28,13 +28,14 @@ export default class PassiveCoveiro {
     this.ensureHUD();
     this.updateHUD();
 
-    this.spaceHandler = scene.input.keyboard.on("keydown-SPACE", () => {
+    this.spaceHandler = () => {
       if (this.scene.passiveSystem.current !== "coveiro") return;
 
       if (player.kills >= player.nextAscencionAt && !player.isInAscencion) {
         this.activateAscension();
       }
-    });
+    };
+    scene.input.keyboard.on("keydown-SPACE", this.spaceHandler);
   }
 
   onEnemyKilled(enemy) {

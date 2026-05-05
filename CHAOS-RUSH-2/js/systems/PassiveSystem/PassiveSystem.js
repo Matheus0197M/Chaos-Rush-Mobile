@@ -68,4 +68,17 @@ export default class PassiveSystem {
       mod.onEnemyKilled(enemy);
     }
   }
+
+  destroy() {
+    this.scene?.events?.off("enemyKilled", this.onEnemyKilled, this);
+
+    Object.values(this.modules).forEach((mod) => {
+      mod?.reset?.();
+    });
+
+    this.current = null;
+    this.modules = {};
+    this.scene = null;
+    this.player = null;
+  }
 }

@@ -69,20 +69,98 @@ export default class MainScene extends Phaser.Scene {
     console.log("Selected class key:", this.selectedClassKey);
   }
 
-
-  create() {
+  resetRunState() {
     this.score = 0;
     this.rankingSaved = false;
     this.rankingSavePromise = null;
     this.runEnded = false;
+    this.isGameStarted = false;
+
+    this.player = null;
+    this.weaponSystem = null;
+    this.passiveSystem = null;
+    this.weaponLoopEvent = null;
+    this.auraDamageEvent = null;
+    this.escPauseHandler = null;
+    this.spacePassiveHandler = null;
+    this.enemyKilledHandler = null;
+    this.returnToMenuTimeout = null;
+    this.returningToMenu = false;
+  }
+
+  shutdownRun() {
+    try { this.time.timeScale = 1; } catch (error) { }
+    this.isGameStarted = false;
+
+    if (this.returnToMenuTimeout) {
+      try { globalThis.clearTimeout(this.returnToMenuTimeout); } catch (error) { }
+      this.returnToMenuTimeout = null;
+    }
+
+    try { this.weaponLoopEvent?.remove?.(false); } catch (error) { }
+    this.weaponLoopEvent = null;
+
+    try { this.auraDamageEvent?.remove?.(false); } catch (error) { }
+    this.auraDamageEvent = null;
+
+    try { this.passiveSystem?.destroy?.(); } catch (error) {
+      console.warn("Falha ao limpar passiva:", error);
+    }
+    this.passiveSystem = null;
+    this.weaponSystem = null;
+
+    try { this.enemiesInAura?.clear?.(); } catch (error) { }
+
+    if (this.input?.keyboard) {
+      if (this.escPauseHandler) {
+        try { this.input.keyboard.off("keydown-ESC", this.escPauseHandler); } catch (error) { }
+      }
+
+      if (this.spacePassiveHandler) {
+        try { this.input.keyboard.off("keydown-SPACE", this.spacePassiveHandler); } catch (error) { }
+      }
+    }
+
+    if (this.enemyKilledHandler) {
+      try { this.events.off("enemyKilled", this.enemyKilledHandler); } catch (error) { }
+    }
+
+    this.escPauseHandler = null;
+    this.spacePassiveHandler = null;
+    this.enemyKilledHandler = null;
+    this.player = null;
+  }
+
+  returnToMenu() {
+    if (this.returningToMenu) return;
+    this.returningToMenu = true;
+
+    if (this.returnToMenuTimeout) {
+      globalThis.clearTimeout(this.returnToMenuTimeout);
+      this.returnToMenuTimeout = null;
+    }
+
+    this.time.timeScale = 1;
+    this.physics?.resume?.();
+    this.scene.stop("PauseMenu");
+    this.scene.start("MenuScene");
+  }
+
+
+  create() {
+    this.shutdownRun();
+    this.resetRunState();
+    this.events.once("shutdown", this.shutdownRun, this);
+    this.time.timeScale = 1;
 
     // Tecla ESC do menu de pausa
-    this.input.keyboard.on('keydown-ESC', () => {
+    this.escPauseHandler = () => {
       if (!this.scene.isPaused('MainScene')) {
         this.pauseGame();
         this.scene.launch('PauseMenu');
       }
-    })
+    };
+    this.input.keyboard.on('keydown-ESC', this.escPauseHandler);
 
     // Mundo
     this.worldWidth = 10000;
@@ -164,7 +242,7 @@ export default class MainScene extends Phaser.Scene {
       Phaser.Input.Keyboard.KeyCodes.SPACE
     );
 
-    this.input.keyboard.on("keydown-SPACE", () => {
+    this.spacePassiveHandler = () => {
       if (!this.passiveSystem || !this.player) return;
 
       const name = (this.player.currentClass || this.player.className || "")
@@ -181,14 +259,16 @@ export default class MainScene extends Phaser.Scene {
       } else if (name.includes("sentinela")) {
         this.passiveSystem.activateSentinela?.();
       }
-    });
+    };
+    this.input.keyboard.on("keydown-SPACE", this.spacePassiveHandler);
 
     // XP drop
-    this.events.on("enemyKilled", enemy => {
+    this.enemyKilledHandler = enemy => {
       if (!enemy) return;
       this.addScore(enemy.xpValue || 10);
       this.spawnXPOrb(enemy.x, enemy.y, enemy.xpValue);
-    });
+    };
+    this.events.on("enemyKilled", this.enemyKilledHandler);
 
     this.enemyBullets = this.add.group();
 
@@ -332,7 +412,7 @@ export default class MainScene extends Phaser.Scene {
     }
 
     // ===== LOOP DE DANO DA AURA =====
-    this.time.addEvent({
+    this.auraDamageEvent = this.time.addEvent({
       delay: this.player.damageInterval || 200,
       callback: this.processAuraDamage,
       callbackScope: this,
@@ -346,6 +426,7 @@ export default class MainScene extends Phaser.Scene {
 
   update(time, delta) {
     if (!this.isGameStarted || !this.player) return;
+    if (this.runEnded) return;
 
     // Player
     this.player.update?.();
@@ -357,10 +438,6 @@ export default class MainScene extends Phaser.Scene {
     this.enemies.children.iterate(enemy => {
       enemy?.update?.(time, delta);
     });
-    // No update() da MainScene, adicione temporariamente:
-    console.log('Enemies:', this.enemies.countActive(true));
-    console.log('XP Orbs:', this.xpOrbs.countActive(true));
-
     // XP Orbs
     this.xpOrbs.children.iterate(orb => {
       orb?.update?.(this.player);
@@ -540,7 +617,14 @@ export default class MainScene extends Phaser.Scene {
   handleRunEnd(message, color = "#00ffff") {
     if (this.runEnded) return;
     this.runEnded = true;
+    this.isGameStarted = false;
 
+    this.weaponLoopEvent?.remove?.(false);
+    this.weaponLoopEvent = null;
+    this.auraDamageEvent?.remove?.(false);
+    this.auraDamageEvent = null;
+
+    this.time.timeScale = 1;
     this.physics.pause();
     this.saveCurrentRanking();
 
@@ -574,10 +658,31 @@ export default class MainScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setScrollFactor(0);
 
-    this.time.delayedCall(3000, async () => {
-      await this.saveCurrentRanking();
-      this.scene.start("MenuScene");
+    const menuButton = this.add.text(
+      this.scale.width / 2,
+      this.scale.height / 2 + 110,
+      "VOLTAR AO MENU",
+      {
+        fontSize: "22px",
+        fill: "#ffff00",
+        fontStyle: "bold",
+        stroke: "#000",
+        strokeThickness: 4
+      }
+    )
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setInteractive({ useHandCursor: true });
+
+    menuButton.on("pointerdown", () => {
+      this.saveCurrentRanking();
+      this.returnToMenu();
     });
+
+    this.returnToMenuTimeout = globalThis.setTimeout(() => {
+      this.saveCurrentRanking();
+      this.returnToMenu();
+    }, 3000);
   }
 
   spawnXPOrb(x, y, value) {
