@@ -44,7 +44,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     // -------------------------
     // STATS BASE
     const baseStats = {
-      chaser: { hp: 20, speed: 80, damage: 5, tint: 0xff3333, xp: 10 },
+      chaser: { hp: 20, speed: 80, damage: 10, tint: 0xff3333, xp: 10 },
       wanderer: { hp: 100, speed: 60, damage: 8, tint: 0x33ff33, xp: 12 },
       shooter: { hp: 80, speed: 40, damage: 10, tint: 0xff9900, xp: 15 },
     };
