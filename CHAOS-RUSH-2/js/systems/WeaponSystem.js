@@ -411,33 +411,78 @@ export default class WeaponSystem {
     }
 
     if (this.cooldowns["foiceEnferrujada"]) return;
+    const attackRange = 450 * this.getStat("aoe", 1);
+    const firstTarget = scene.getClosestEnemy(attackRange);
+    if (!firstTarget) return;
+
     this.startCooldown("foiceEnferrujada", 2500);
+
+    const spawnAngle = Phaser.Math.Angle.Between(
+      player.x,
+      player.y,
+      firstTarget.x,
+      firstTarget.y
+    );
 
     const foice = scene.add
       .sprite(
-        player.x,
-        player.y,
-        scene.textures.exists("foiceSprite") ? "foiceSprite" : null
+        player.x + Math.cos(spawnAngle) * 28,
+        player.y + Math.sin(spawnAngle) * 28,
+        scene.textures.exists("foiceGirando") ? "foiceGirando" : "foiceSprite"
       )
       .setDepth(6)
       .setOrigin(0.5)
-      .setTint(0x9b7653);
+      .setScale(0.72);
+
+    // Executar animação de rotação
+    if (scene.textures.exists("foiceGirando") && scene.anims.exists("foiceGirandoAnim")) {
+      foice.play("foiceGirandoAnim");
+    }
+
     scene.physics.add.existing(foice);
     foice.body.setAllowGravity(false);
-    if (foice.body.setSize) foice.body.setSize(24, 24);
+    if (foice.body.setSize) foice.body.setSize(36, 36);
     foice.body.isSensor = true;
 
     const SPEED = 420 * this.getStat("projectileSpeed", 1);
     foice.isControlling = true;
 
     let aimOffset = Phaser.Math.FloatBetween(-0.12, 0.12);
+    let returning = false;
+    let followTimer = null;
+    let aimTimer = null;
+
+    const returnFoice = () => {
+      if (returning || !foice.active) return;
+      returning = true;
+
+      foice.isControlling = false;
+      followTimer?.remove(false);
+      aimTimer?.remove(false);
+
+      if (foice.body) foice.body.setVelocity(0, 0);
+
+      scene.tweens.add({
+        targets: foice,
+        x: player.x,
+        y: player.y,
+        duration: 320,
+        ease: "Sine.easeInOut",
+        onUpdate: () => {
+          foice.rotation += 0.25;
+        },
+        onComplete: () => {
+          if (foice && foice.destroy) foice.destroy();
+        },
+      });
+    };
 
     const updateFoice = () => {
       if (!foice.isControlling || !foice.active) return;
 
-      const target = scene.getClosestEnemy(450 * this.getStat("aoe", 1));
+      const target = scene.getClosestEnemy(attackRange);
       if (!target) {
-        foice.body.setVelocity(0, 0);
+        returnFoice();
         return;
       }
 
@@ -450,17 +495,17 @@ export default class WeaponSystem {
 
       foice.rotation = angle;
       scene.physics.velocityFromRotation(angle, SPEED, foice.body.velocity);
-
-      scene.time.addEvent({
-        delay: 400,
-        loop: true,
-        callback: () => {
-          aimOffset = Phaser.Math.FloatBetween(-0.12, 0.12);
-        }
-      });
     };
 
-    const followTimer = scene.time.addEvent({
+    aimTimer = scene.time.addEvent({
+      delay: 400,
+      loop: true,
+      callback: () => {
+        aimOffset = Phaser.Math.FloatBetween(-0.12, 0.12);
+      }
+    });
+
+    followTimer = scene.time.addEvent({
       delay: 16,
       loop: true,
       callback: updateFoice,
@@ -468,6 +513,7 @@ export default class WeaponSystem {
 
     // 🎯 EFEITO AO ACERTAR INIMIGOS
     scene.physics.add.overlap(foice, scene.enemies, (f, enemy) => {
+      if (returning) return;
       if (!enemy || !enemy.active || enemy.isDead) return;
 
       const damage =
@@ -560,23 +606,7 @@ export default class WeaponSystem {
     // 🔁 Retorno da foice
     scene.time.delayedCall(controlTime, () => {
       if (!foice.active) return;
-
-      foice.isControlling = false;
-      if (followTimer) followTimer.remove(false);
-
-      scene.tweens.add({
-        targets: foice,
-        x: player.x,
-        y: player.y,
-        duration: 400,
-        ease: "Sine.easeInOut",
-        onUpdate: () => {
-          foice.rotation += 0.25;
-        },
-        onComplete: () => {
-          if (foice && foice.destroy) foice.destroy();
-        },
-      });
+      returnFoice();
     });
   }
 

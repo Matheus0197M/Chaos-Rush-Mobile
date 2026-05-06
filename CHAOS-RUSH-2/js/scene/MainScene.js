@@ -33,14 +33,21 @@ export default class MainScene extends Phaser.Scene {
       frameHeight: 288
     });
 
-    this.load.spritesheet("coveiro", "assets/Sprites/Coveiro22.png", {
-      frameWidth: 226,
-      frameHeight: 406
+    this.load.spritesheet("coveiro", "assets/Sprites/coveiro-recortado.png", {
+      frameWidth: 288,
+      frameHeight: 360,
+      endFrame: 13
     });
 
     this.load.spritesheet("sentinela", "assets/Sprites/Sentinela.png", {
       frameWidth: 256,
       frameHeight: 256
+    });
+
+    this.load.spritesheet("foiceGirando", "assets/Sprites/foice-girando-recortada.png", {
+      frameWidth: 160,
+      frameHeight: 160,
+      endFrame: 39
     });
 
     shapes.forEach(shape => {
@@ -315,6 +322,16 @@ export default class MainScene extends Phaser.Scene {
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
     this.weaponSystem = new WeaponSystem(this, this.player);
     this.passiveSystem = new PassiveSystem(this, this.player);
+
+    // ===== ANIMAÇÃO DA FOICE GIRANDO =====
+    if (!this.anims.exists("foiceGirandoAnim")) {
+      this.anims.create({
+        key: "foiceGirandoAnim",
+        frames: this.anims.generateFrameNumbers("foiceGirando", { start: 0, end: 39 }),
+        frameRate: 32,
+        repeat: -1
+      });
+    }
 
     if (classConfig.weaponKey) {
       this.weaponSystem.useWeapon(classConfig.weaponKey);

@@ -51,7 +51,7 @@ animations: {
 
     animations: {
       idle: { start: 0, end: 0, frameRate: 1, repeat: -1 },
-      walk: { start: 0, end: 7, frameRate: 7, repeat: -1 }
+      walk: { start: 0, end: 13, frameRate: 8, repeat: -1 }
     },
 
     passive: PassiveCoveiro,
