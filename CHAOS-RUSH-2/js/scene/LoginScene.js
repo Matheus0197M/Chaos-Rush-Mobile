@@ -102,7 +102,7 @@ export default class LoginScene extends Phaser.Scene {
 
     const senha = this.add.dom(width/2, senhaY).createFromHTML(`
       <div style='position:relative;width:${inputWidth}px;height:${inputHeight}px;'>
-        <input id='senha' type='password' placeholder='Senha' style='${inputStyle} padding-right: 50px;'>
+        <input id='senha' type='password' placeholder='Senha' style='${inputStyle} padding-right: auto;'>
         <button id='toggle-senha' type='button' aria-label='Mostrar senha' style='position:absolute;right:12px;top:50%;transform:translateY(-50%);width:32px;height:32px;border:none;background:transparent;color:#00ffff;font-size:20px;cursor:pointer;transition:all 0.2s ease;'>👁️</button>
       </div>
     `);
