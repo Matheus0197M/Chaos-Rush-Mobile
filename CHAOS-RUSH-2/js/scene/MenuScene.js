@@ -134,6 +134,7 @@ export default class MenuScene extends Phaser.Scene {
       this.add
       .text(width / 2, subtitleY / 0.45, 'Pronto pra jogar?', {
         fontSize: `${Math.min(45, Math.max(35, width * 0.7))}px`,
+        fontStyle: '900',
         fill: '#ffff00',
       })
       .setOrigin(1)
