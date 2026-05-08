@@ -20,7 +20,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
-    if (classKey === "coveiro") {
+    if (classKey === "alquimista") {
+      this.setSize(58, 110);
+      this.setOffset(34, 118);
+      this.setScale(0.55);
+    } else if (classKey === "coveiro") {
       this.setSize(70, 96);
       this.setOffset(109, 250);
       this.setScale(0.34);
@@ -289,7 +293,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       state = "walk";
     }
 
-    if (this.classKey === "coveiro" && vx !== 0) {
+    if ((this.classKey === "coveiro" || this.classKey === "alquimista") && vx !== 0) {
       this.setFlipX(vx < 0);
     }
 

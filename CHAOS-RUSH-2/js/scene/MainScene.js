@@ -26,11 +26,12 @@ export default class MainScene extends Phaser.Scene {
       { key: "flask", color: 0xffffff, type: "rect", w: 8, h: 8 }
     ];
 
-    this.load.image('map', 'assets/img/map.png');
+    this.load.image('map', 'assets/img/mapa atualizado pt3.png');
 
     this.load.spritesheet("alquimista", "assets/Sprites/Alquimista12.png", {
-      frameWidth: 165,
-      frameHeight: 288
+      frameWidth: 125,
+      frameHeight: 250,
+      endFrame: 7
     });
 
     this.load.spritesheet("coveiro", "assets/Sprites/coveiro-recortado.png", {
@@ -170,8 +171,8 @@ export default class MainScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-ESC', this.escPauseHandler);
 
     // Mundo
-    this.worldWidth = 10000;
-    this.worldHeight = 10000;
+    this.worldWidth = 5000;
+    this.worldHeight = 5000;
     this.physics.world.setBounds(0, 0, this.worldWidth, this.worldHeight);
 
     // ✅ Certo - imagem única cobrindo todo o mundo
@@ -179,11 +180,6 @@ export default class MainScene extends Phaser.Scene {
       .setOrigin(0)
       .setDisplaySize(this.worldWidth, this.worldHeight)
       .setDepth(-1);
-
-    // Mundo
-    this.worldWidth = 8000;
-    this.worldHeight = 5000;
-    this.physics.world.setBounds(0, 0, this.worldWidth, this.worldHeight);
 
     // Grupos
     this.enemies = this.physics.add.group({ runChildUpdate: true });
