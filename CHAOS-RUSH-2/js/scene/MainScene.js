@@ -26,7 +26,7 @@ export default class MainScene extends Phaser.Scene {
       { key: "flask", color: 0xffffff, type: "rect", w: 8, h: 8 }
     ];
 
-    this.load.image('map', 'assets/img/mapa atualizado pt3.png');
+    this.load.image('map', 'assets/img/mapa atualizado pt4.png');
 
     this.load.spritesheet("alquimista", "assets/Sprites/Alquimista12.png", {
       frameWidth: 125,
@@ -75,6 +75,30 @@ export default class MainScene extends Phaser.Scene {
   init(data) {
     this.selectedClassKey = data?.selectedClassKey ?? null;
     console.log("Selected class key:", this.selectedClassKey);
+  }
+
+  createWorldBounds() {
+    const wallThickness = 64;
+
+    this.walls = this.physics.add.staticGroup();
+
+    const top = this.add.rectangle(0, 0, this.worldWidth, wallThickness)
+      .setOrigin(0)
+      .setVisible(false);
+    const bottom = this.add.rectangle(0, this.worldHeight - wallThickness, this.worldWidth, wallThickness)
+      .setOrigin(0)
+      .setVisible(false);
+    const left = this.add.rectangle(0, 0, wallThickness, this.worldHeight)
+      .setOrigin(0)
+      .setVisible(false);
+    const right = this.add.rectangle(this.worldWidth - wallThickness, 0, wallThickness, this.worldHeight)
+      .setOrigin(0)
+      .setVisible(false);
+
+    [top, bottom, left, right].forEach(wall => {
+      this.physics.add.existing(wall, true);
+      this.walls.add(wall);
+    });
   }
 
   resetRunState() {
@@ -171,15 +195,17 @@ export default class MainScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-ESC', this.escPauseHandler);
 
     // Mundo
-    this.worldWidth = 5000;
-    this.worldHeight = 5000;
+    this.worldWidth = 15000;
+    this.worldHeight = 15000;
     this.physics.world.setBounds(0, 0, this.worldWidth, this.worldHeight);
+    this.cameras.main.setBounds(0, 0, this.worldWidth, this.worldHeight);
 
-    // ✅ Certo - imagem única cobrindo todo o mundo
-    this.add.image(0, 0, 'map')
+    // Fundo repetido automaticamente pelo Phaser
+    this.background = this.add.tileSprite(0, 0, this.worldWidth, this.worldHeight, 'map')
       .setOrigin(0)
-      .setDisplaySize(this.worldWidth, this.worldHeight)
       .setDepth(-1);
+
+    this.createWorldBounds();
 
     // Grupos
     this.enemies = this.physics.add.group({ runChildUpdate: true });
@@ -314,6 +340,7 @@ export default class MainScene extends Phaser.Scene {
     }
 
     this.player.setCollideWorldBounds?.(true);
+    this.physics.add.collider(this.player, this.walls);
 
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
     this.weaponSystem = new WeaponSystem(this, this.player);
