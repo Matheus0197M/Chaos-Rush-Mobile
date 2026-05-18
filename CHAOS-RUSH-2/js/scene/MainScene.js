@@ -26,7 +26,8 @@ export default class MainScene extends Phaser.Scene {
       { key: "flask", color: 0xffffff, type: "rect", w: 8, h: 8 }
     ];
 
-    this.load.image('map', 'assets/img/mapa atualizado pt4.png');
+    this.load.image('mapPlanicie', 'assets/img/mapa atualizado pt4.png');
+    this.load.image('mapGrave', 'assets/img/mapa gravenigger.png');
 
     this.load.spritesheet("alquimista", "assets/Sprites/Alquimista12.png", {
       frameWidth: 125,
@@ -201,7 +202,8 @@ export default class MainScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, this.worldWidth, this.worldHeight);
 
     // Fundo repetido automaticamente pelo Phaser
-    this.background = this.add.tileSprite(0, 0, this.worldWidth, this.worldHeight, 'map')
+    const mapKey = this.selectedClassKey === 'coveiro' ? 'mapGrave' : 'mapPlanicie';
+    this.background = this.add.tileSprite(0, 0, this.worldWidth, this.worldHeight, mapKey)
       .setOrigin(0)
       .setDepth(-1);
 
