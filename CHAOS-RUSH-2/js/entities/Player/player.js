@@ -67,7 +67,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       left: "A",
       down: "S",
       right: "D",
-      dash: "SHIFT",
+      dash: "Q",
     });
 
     this.dashing = false;
