@@ -1,8 +1,6 @@
-import { fetchRankings } from "../systems/RankingService.js";
-
 export default class MenuScene extends Phaser.Scene {
   constructor() {
-    super({ key: 'MenuScene' });
+    super({ key: 'PrefaceMenu' });
   }
 
   preload() {
@@ -223,121 +221,6 @@ export default class MenuScene extends Phaser.Scene {
     });
 
     this.scale.on('resize', this.resize, this);
-  }
-  
-  // SISTEMA DE RANKING
-  createRankingPanel(width, height, layout) {
-    const { hasRankingColumn, classPanelY, classPanelHeight, isCompact } = layout;
-    const panelWidth = hasRankingColumn ? Math.min(380, width * 0.29) : Math.min(760, width - 32);
-    const bottomSpace = height - (classPanelY + classPanelHeight / 2) - 58;
-    const panelHeight = hasRankingColumn ? classPanelHeight : Math.max(175, Math.min(235, bottomSpace));
-    const panelX = hasRankingColumn ? width * 0.78 : width / 2;
-    const panelY = hasRankingColumn
-      ? classPanelY
-      : Math.min(height - panelHeight / 2 - 14, classPanelY + classPanelHeight / 2 + 48 + panelHeight / 2);
-
-    this.add
-      .rectangle(panelX, panelY, panelWidth, panelHeight, 0x000000, 0.64)
-      .setOrigin(0.5)
-      .setStrokeStyle(2, 0xfff700)
-      .setDepth(8);
-
-    this.add.text(panelX, panelY - panelHeight / 2 + 30, 'RANKING', {
-      fontSize: `${isCompact ? 20 : 26}px`,
-      fill: '#fff700',
-      fontStyle: 'bold',
-    })
-      .setOrigin(0.5)
-      .setDepth(9);
-
-    const headerY = panelY - panelHeight / 2 + (isCompact ? 52 : 70);
-    this.add.text(panelX - panelWidth * 0.42, headerY, '#', {
-      fontSize: `${isCompact ? 12 : 14}px`,
-      fill: '#00ffff',
-      fontStyle: 'bold',
-    }).setDepth(9);
-
-    this.add.text(panelX - panelWidth * 0.32, headerY, 'Jogador', {
-      fontSize: `${isCompact ? 12 : 14}px`,
-      fill: '#00ffff',
-      fontStyle: 'bold',
-    }).setDepth(9);
-
-    this.add.text(panelX + panelWidth * 0.12, headerY, 'Pontos', {
-      fontSize: `${isCompact ? 12 : 14}px`,
-      fill: '#00ffff',
-      fontStyle: 'bold',
-    }).setOrigin(0.5, 0).setDepth(9);
-
-    this.add.text(panelX + panelWidth * 0.32, headerY, 'Lv', {
-      fontSize: `${isCompact ? 12 : 14}px`,
-      fill: '#00ffff',
-      fontStyle: 'bold',
-    }).setOrigin(0.5, 0).setDepth(9);
-
-    this.rankingStatusText = this.add.text(panelX, panelY, 'Carregando ranking...', {
-      fontSize: `${isCompact ? 13 : 16}px`,
-      fill: '#cccccc',
-      align: 'center',
-      wordWrap: { width: panelWidth - 40 },
-    })
-      .setOrigin(0.5)
-      .setDepth(9);
-
-    this.loadRankingRows(panelX, panelY, panelWidth, panelHeight, isCompact);
-  }
-
-  async loadRankingRows(panelX, panelY, panelWidth, panelHeight, isCompact) {
-    const rows = await fetchRankings(isCompact ? 5 : 10);
-
-    this.rankingStatusText?.destroy();
-
-    if (!rows.length) {
-      this.rankingStatusText = this.add.text(panelX, panelY, 'Nenhuma pontuacao registrada ainda.', {
-        fontSize: `${isCompact ? 13 : 16}px`,
-        fill: '#cccccc',
-        align: 'center',
-        wordWrap: { width: panelWidth - 40 },
-      })
-        .setOrigin(0.5)
-        .setDepth(9);
-      return;
-    }
-
-    const startY = panelY - panelHeight / 2 + (isCompact ? 78 : 100);
-    const rowGap = Math.min(isCompact ? 27 : 36, (panelHeight - (isCompact ? 95 : 120)) / rows.length);
-
-    rows.forEach((row, index) => {
-      const y = startY + index * rowGap;
-      const name = String(row.nome).slice(0, isCompact ? 12 : 14);
-      const fontSize = `${isCompact ? 12 : 14}px`;
-
-      this.add.text(panelX - panelWidth * 0.42, y, `${row.position}`, {
-        fontSize,
-        fill: '#ffffff',
-      }).setDepth(9);
-
-      this.add.text(panelX - panelWidth * 0.32, y, name, {
-        fontSize,
-        fill: '#ffffff',
-      }).setDepth(9);
-
-      this.add.text(panelX + panelWidth * 0.12, y, `${row.maxPontuacao}`, {
-        fontSize,
-        fill: '#fff700',
-      }).setOrigin(0.5, 0).setDepth(9);
-
-      this.add.text(panelX + panelWidth * 0.34, y, `${row.maxLevel}`, {
-        fontSize,
-        fill: '#00ffff',
-      }).setOrigin(0.5, 0).setDepth(9);
-    });
-  }
-
-  resize(gameSize) {
-    const { width, height } = gameSize;
-    this.bgFar.setSize(width, height);
-    this.bgNear.setSize(width, height);
   }
 
   update(time, delta) {
