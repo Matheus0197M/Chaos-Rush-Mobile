@@ -127,11 +127,19 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     let vx = 0;
     let vy = 0;
 
-    if (up.isDown) vy = -1;
-    else if (down.isDown) vy = 1;
+    // ── JOYSTICK (mobile) ──────────────────────
+    const joy = this.scene.joystick;
+    if (joy && joy.active) {
+      vx = joy.vx;
+      vy = joy.vy;
+    } else {
+      // ── TECLADO (desktop / fallback) ──────────
+      if (up.isDown) vy = -1;
+      else if (down.isDown) vy = 1;
 
-    if (left.isDown) vx = -1;
-    else if (right.isDown) vx = 1;
+      if (left.isDown) vx = -1;
+      else if (right.isDown) vx = 1;
+    }
 
     const speed = this.dashing ? this.speed * 3 : this.speed;
 
@@ -158,7 +166,17 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     if (!this.canAttack) return;
 
-    if (this.keys.dash.isDown && !this.dashing && !this.dashCooldown) {
+    // ── JOYSTICK dash (mobile) ──────────────────
+    const joy = this.scene.joystick;
+    const joystickDash = joy && joy.dashPressed;
+
+    // ── TECLADO dash (desktop / fallback) ───────
+    const keyboardDash = this.keys.dash.isDown;
+
+    if ((keyboardDash || joystickDash) && !this.dashing && !this.dashCooldown) {
+
+      // consome o sinal do botão para não repetir
+      if (joystickDash) joy.consumeDash();
 
       this.dashing = true;
       this.dashCooldown = true;

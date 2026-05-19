@@ -1,4 +1,4 @@
-import VirtualJoystick from "../systems/VirtualJoystick.js";
+import VirtualJoystick from "../../VirtualJoystick.js";
 import Player from "../entities/Player/player.js";
 import Enemy from "../entities/Enemy/enemy.js";
 import XPOrb from "../entities/XPOrb.js";

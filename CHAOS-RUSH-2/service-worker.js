@@ -1,5 +1,5 @@
-const CACHE_NAME = "chaos-rush-v3";
-const RUNTIME_CACHE = "chaos-rush-runtime-v3";
+const CACHE_NAME = "chaos-rush-v4";
+const RUNTIME_CACHE = "chaos-rush-runtime-v4";
 
 const FILES_TO_CACHE = [
 
@@ -11,7 +11,7 @@ const FILES_TO_CACHE = [
   "./js/phaser.min.js",
   "./js/main.js",
   "./js/supabaseClient.js",
-  "./js/VirtualJoystick.js",
+  "./VirtualJoystick.js",
 
   "./js/scene/LoginScene.js",
   "./js/scene/RegisterScene.js",
