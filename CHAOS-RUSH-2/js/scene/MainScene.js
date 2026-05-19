@@ -42,7 +42,7 @@ this.load.spritesheet("alquimista", "assets/Sprites/alquimistateste.png", {
       endFrame: 13
     });
 
-    this.load.spritesheet("sentinela", "assets/Sprites/Sentinela.png", {
+    this.load.spritesheet("bastiao", "assets/Sprites/Bastiao.png", {
       frameWidth: 256,
       frameHeight: 256
     });
@@ -288,8 +288,8 @@ this.load.spritesheet("alquimista", "assets/Sprites/alquimistateste.png", {
         this.passiveSystem.activatePassiva?.();
       } else if (name.includes("coveiro")) {
         this.passiveSystem.activateAscension?.(this.player);
-      } else if (name.includes("sentinela")) {
-        this.passiveSystem.activateSentinela?.();
+      } else if (name.includes("bastiao")) {
+        this.passiveSystem.activateBastiao?.();
       }
     };
     this.input.keyboard.on("keydown-SPACE", this.spacePassiveHandler);

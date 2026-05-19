@@ -31,17 +31,17 @@ export default class ClassSystem {
                 }
             },
 
-            SENTINEL: {
-                key: "SENTINEL",
-                name: "Sentinela do Sino",
-                subtitle: "Eco Sagrado",
-                description: "Sino da Purificação: push + área. Passiva: aumenta knockback e dano ao empurrar.",
-                weaponKey: "sinoPurificacao",
-                passiveKey: "ecoSagrado",
+            BASTIAO: {
+                key: "BASTIAO",
+                name: "Bastião de Engrenagens",
+                subtitle: "Bruto Mecânico",
+                description: "Máquina de guerra movida a pressão. Acumula calor ao lutar, ganhando dano. Imortal através do aço e combustão.",
+                weaponKey: "pilarCombustao",
+                passiveKey: "validaSacrificio",
                 base: {
-                    speedMultiplier: 1.0,
-                    damageMultiplier: 1.0,
-                    auraRangeBonus: 10
+                    speedMultiplier: 0.95,
+                    damageMultiplier: 1.1,
+                    auraRangeBonus: 20
                 }
             },
         };

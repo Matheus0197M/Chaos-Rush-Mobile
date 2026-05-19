@@ -152,10 +152,9 @@ export default class MenuScene extends Phaser.Scene {
         desc: 'Profana a terra com a Foice Enferrujada, aplicando Podridão e Lentidão aos inimigos.',
       },
       {
-        Key: 'sentinela',
-        name: 'A Sentinela do Sino',
-        desc: 'Toca o Sino da Purificação, causando dano em área e empurrando inimigos.\nDano bônus quando empurra inimigos.',
-        estreia: 'EM BREVE!!!!',
+        Key: 'bastiao',
+        name: 'O Bastião de Engrenagens',
+        desc: 'Uma máquina de guerra rudimentar. Acumula Calor ao lutar, transformando dano em poder.\nQuanto mais bate, mais forte fica.',
       },
     ];
 
