@@ -1,3 +1,4 @@
+import VirtualJoystick from "../systems/VirtualJoystick.js";
 import Player from "../entities/Player/player.js";
 import Enemy from "../entities/Enemy/enemy.js";
 import XPOrb from "../entities/XPOrb.js";
@@ -215,6 +216,18 @@ this.load.spritesheet("alquimista", "assets/Sprites/alquimistateste.png", {
     this.events.once("shutdown", this.shutdownRun, this);
     this.time.timeScale = 1;
     this.createEnemySpriteTextures();
+create() {
+  this.shutdownRun();
+  this.resetRunState();
+  this.events.once("shutdown", this.shutdownRun, this);
+  this.time.timeScale = 1;
+
+  // MOBILE JOYSTICK
+  if (this.sys.game.device.input.touch) {
+    this.joystick = new VirtualJoystick();
+  }
+
+  // Tecla ESC do menu de pausa
 
     // Tecla ESC do menu de pausa
     this.escPauseHandler = () => {
@@ -400,9 +413,15 @@ this.load.spritesheet("alquimista", "assets/Sprites/alquimistateste.png", {
       this.weaponLoopEvent = this.time.addEvent({
         delay: this.baseWeaponLoopDelay,
         loop: true,
-        callback: () => {
-          this.weaponSystem.useWeapon(classConfig.weaponKey);
-        },
+       callback: () => {
+
+  // toca animação do alquimista
+  if (this.player?.classKey === "alquimista") {
+    this.player.playThrowAnimation();
+  }
+
+  this.weaponSystem.useWeapon(classConfig.weaponKey);
+},
       });
     }
 

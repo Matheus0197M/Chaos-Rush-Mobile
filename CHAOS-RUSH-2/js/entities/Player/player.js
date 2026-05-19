@@ -20,8 +20,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
-this.setScale(0.8);
-this.setOrigin(0.5, 0.8);
+    this.setScale(0.8);
+    this.setOrigin(0.5, 0.8);
 
     if (classKey === "alquimista") {
       this.setSize(58, 110);
@@ -43,16 +43,13 @@ this.setOrigin(0.5, 0.8);
     this.classKey = classKey;
     this.classConfig = classConfig;
 
-    // SISTEMAS DE STAT E DANO
     this.stats = new StatsPlayer(this, classConfig.stats);
     this.damageSystem = new DamagePlayer(this, this.stats);
 
-    // SISTEMA DE VELOCIDADE
     this.speedBase = 200;
     this.speedModifiers = {};
     this.speed = this.speedBase;
 
-    // STATUS BASE
     this.level = 1;
     this.xp = 0;
     this.xpToNext = 100;
@@ -64,7 +61,6 @@ this.setOrigin(0.5, 0.8);
 
     this.syncStats();
 
-    // INPUTS
     this.keys = scene.input.keyboard.addKeys({
       up: "W",
       left: "A",
@@ -84,8 +80,6 @@ this.setOrigin(0.5, 0.8);
 
     this.createAnimations();
   }
-
-  // SISTEMA PRINCIPAL
 
   getStat(key, fallback = 0) {
     if (typeof this.stats?.get === "function") {
@@ -115,49 +109,6 @@ this.setOrigin(0.5, 0.8);
     this.auraRange = this.getStat("auraRange", 110);
   }
 
-  addSpeedModifier(name, mult) {
-    this.speedModifiers[name] = mult;
-    this.recalculateSpeed();
-  }
-
-  removeSpeedModifier(name) {
-    delete this.speedModifiers[name];
-    this.recalculateSpeed();
-  }
-
-  recalculateSpeed() {
-    let finalMult = 1;
-
-    for (const key in this.speedModifiers) {
-      finalMult *= this.speedModifiers[key];
-    }
-
-    this.speed = this.speedBase * finalMult;
-  }
-
-  setCanAttack(value) {
-    this.canAttack = value;
-
-    // trava dash também quando carregando a bomba
-    if (!value) {
-      this.dashing = false;
-      this.dashCooldown = true;
-    } else {
-      // libera novamente após final da bomba
-      this.dashCooldown = false;
-    }
-  }
-
-  lockInput() {
-    this.inputLocked = true;
-    this.setVelocity(0, 0);
-  }
-
-  unlockInput() {
-    this.inputLocked = false;
-  }
-
-  // MOVIMENTO DO PLAYER
   update() {
 
     if (this.inputLocked) {
@@ -167,11 +118,6 @@ this.setOrigin(0.5, 0.8);
 
     this.handleMovement();
     this.handleDash();
-
-    const speed = this.speed;
-
-    let vy = 0;
-    let vx = 0;
   }
 
   handleMovement() {
@@ -190,6 +136,7 @@ this.setOrigin(0.5, 0.8);
     const speed = this.dashing ? this.speed * 3 : this.speed;
 
     const vec = new Phaser.Math.Vector2(vx, vy).normalize();
+
     this.setVelocity(vec.x * speed, vec.y * speed);
 
     if (vx !== 0 || vy !== 0) {
@@ -197,19 +144,22 @@ this.setOrigin(0.5, 0.8);
     }
 
     this.updateAnimations(vx, vy);
-
   }
 
   getFacingDirection(vx, vy) {
-    if (Math.abs(vx) > Math.abs(vy)) return vx > 0 ? "right" : "left";
+    if (Math.abs(vx) > Math.abs(vy)) {
+      return vx > 0 ? "right" : "left";
+    }
+
     return vy > 0 ? "down" : "up";
   }
 
-  // SISTEMA DE DASH
   handleDash() {
+
     if (!this.canAttack) return;
 
     if (this.keys.dash.isDown && !this.dashing && !this.dashCooldown) {
+
       this.dashing = true;
       this.dashCooldown = true;
 
@@ -223,10 +173,11 @@ this.setOrigin(0.5, 0.8);
     }
   }
 
-  // SISTEMA DE XP / LEVEL
   gainXP(amount) {
+
     const multiplier = this.xpGain ?? 1;
     const final = Math.floor(amount * multiplier);
+
     this.xp += final;
 
     this.scene?.updateXpBar?.();
@@ -239,23 +190,29 @@ this.setOrigin(0.5, 0.8);
   }
 
   levelUp() {
+
     this.level++;
+
     this.xp -= this.xpToNext;
+
     this.xpToNext = Math.floor(this.xpToNext * 1.25);
 
     this.stats.addFlat("maxHP", 10);
+
     this.baseDamage += 1;
+
     this.syncStats();
+
     this.currentHP = this.maxHP;
 
     this.scene?.updateHealthBar?.();
     this.scene?.updateXpBar?.();
 
-    if (this.scene?.upgradeSystem?.openUpgradeMenu)
+    if (this.scene?.upgradeSystem?.openUpgradeMenu) {
       this.scene.upgradeSystem.openUpgradeMenu();
+    }
   }
 
-  // SISTEMA DE DANO
   takeDamage(amount) {
     this.damageSystem.takeDamage(amount);
   }
@@ -269,20 +226,24 @@ this.setOrigin(0.5, 0.8);
   }
 
   createAnimations() {
+
     const anims = this.scene.anims;
     const animConfig = this.classConfig.animations;
 
     for (const key in animConfig) {
+
       const animKey = `${this.classKey}-${key}`;
 
       if (anims.exists(animKey)) continue;
 
       anims.create({
         key: animKey,
+
         frames: anims.generateFrameNumbers(this.texture.key, {
           start: animConfig[key].start,
           end: animConfig[key].end
         }),
+
         frameRate: animConfig[key].frameRate || 8,
         repeat: animConfig[key].repeat ?? -1
       });
@@ -290,8 +251,14 @@ this.setOrigin(0.5, 0.8);
   }
 
   updateAnimations(vx, vy) {
-    // Animacao de arremesso tem prioridade — nao interrompe durante a sequencia
-    if (this.animState === "throw" || this.animState === "throwFollow") return;
+
+    // NÃO deixa walk/idle interromper arremesso
+    if (
+      this.animState === "throw" ||
+      this.animState === "throwFollow"
+    ) {
+      return;
+    }
 
     let state = "idle";
 
@@ -299,7 +266,11 @@ this.setOrigin(0.5, 0.8);
       state = "walk";
     }
 
-    if ((this.classKey === "coveiro" || this.classKey === "alquimista") && vx !== 0) {
+    if (
+      (this.classKey === "coveiro" ||
+        this.classKey === "alquimista")
+      && vx !== 0
+    ) {
       this.setFlipX(vx < 0);
     }
 
@@ -318,27 +289,36 @@ this.setOrigin(0.5, 0.8);
       this.play(animKey, true);
       this.lastAnim = animKey;
     }
+
+
+    if (vx === 0 && vy === 0 && state === "idle") {
+
+      this.stop();
+
+      const idleConfig = this.classConfig.animations.idle;
+
+      this.setFrame(idleConfig.start);
+    }
   }
 
-  /**
-   * Executa a sequencia de animacao de arremesso do alquimista.
-   * Reproduz "throw" (backswing + lancamento), seguido de "throwFollow"
-   * (follow-through pos-lancamento), e entao retorna ao estado anterior.
-   * Deve ser chamado por WeaponSystem imediatamente antes de lancar o projetil.
-   */
   playThrowAnimation() {
+
     if (this.classKey !== "alquimista") return;
 
     const throwKey  = "alquimista-throw";
+    const throwKey = "alquimista-throw";
     const followKey = "alquimista-throwFollow";
 
-    if (!this.scene.anims.exists(throwKey) || !this.scene.anims.exists(followKey)) {
-      console.warn("Animacoes de arremesso nao encontradas:", throwKey, followKey);
+    if (
+      !this.scene.anims.exists(throwKey) ||
+      !this.scene.anims.exists(followKey)
+    ) {
+      console.warn("Animacoes nao encontradas");
       return;
     }
 
     this.animState = "throw";
-    this.lastAnim  = throwKey;
+
     this.play(throwKey, true);
 
     const onThrowComplete = (animation) => {
@@ -346,10 +326,11 @@ this.setOrigin(0.5, 0.8);
       this.off(Phaser.Animations.Events.ANIMATION_COMPLETE, onThrowComplete);
 
       if (this.animState !== "throw") return;
+    this.once(
+      Phaser.Animations.Events.ANIMATION_COMPLETE_KEY + throwKey,
+      () => {
 
-      this.animState = "throwFollow";
-      this.lastAnim  = followKey;
-      this.play(followKey, true);
+        this.animState = "throwFollow";
 
       const onFollowComplete = (animation2) => {
         if (animation2.key !== followKey) return;
@@ -364,15 +345,30 @@ this.setOrigin(0.5, 0.8);
       };
 
       this.on(Phaser.Animations.Events.ANIMATION_COMPLETE, onFollowComplete);
-    };
+    });
 
     this.on(Phaser.Animations.Events.ANIMATION_COMPLETE, onThrowComplete);
+        this.play(followKey, true);
+
+        this.once(
+          Phaser.Animations.Events.ANIMATION_COMPLETE_KEY + followKey,
+          () => {
+
+            const moving =
+              Math.abs(this.body.velocity.x) > 5 ||
+              Math.abs(this.body.velocity.y) > 5;
+
+            this.animState = moving ? "walk" : "idle";
+
+            this.lastAnim = "";
+          }
+        );
+      }
   }
 
-  // MORTE DO PLAYER
-  die(){
+  die() {
     this.setTint(0xf00);
-    this.setVelocity(0,0);
+    this.setVelocity(0, 0);
     this.scene.playerDied();
   }
 }
