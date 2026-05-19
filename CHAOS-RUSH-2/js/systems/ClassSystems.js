@@ -31,17 +31,17 @@ export default class ClassSystem {
                 }
             },
 
-            SENTINEL: {
-                key: "SENTINEL",
-                name: "Sentinela do Sino",
-                subtitle: "Eco Sagrado",
-                description: "Sino da Purificação: push + área. Passiva: aumenta knockback e dano ao empurrar.",
-                weaponKey: "sinoPurificacao",
-                passiveKey: "ecoSagrado",
+            BASTION: {
+                key: "BASTION",
+                name: "Bastião de Engrenagens",
+                subtitle: "Válvula de Sacrifício",
+                description: "Máquina mecânica que converte dano recebido em poder. Superaquecimento: velocidade e dano aumentados por 6s.",
+                weaponKey: "pilarCombustao",
+                passiveKey: "valvulaSacrificio",
                 base: {
-                    speedMultiplier: 1.0,
-                    damageMultiplier: 1.0,
-                    auraRangeBonus: 10
+                    speedMultiplier: 0.85,
+                    damageMultiplier: 1.3,
+                    auraRangeBonus: 15
                 }
             },
         };
@@ -79,7 +79,7 @@ export default class ClassSystem {
                 .setDepth(101)
                 .setInteractive({ useHandCursor: true });
 
-            const iconSymbol = i === 0 ? "🧪" : i === 1 ? "⚰️" : "🔔";
+            const iconSymbol = i === 0 ? "🧪" : i === 1 ? "⚰️" : "⚙️";
 
             const icon = this.scene.add.text(x, height / 2 - 80, iconSymbol, {
                 fontSize: "48px"
