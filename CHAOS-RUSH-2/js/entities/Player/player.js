@@ -20,6 +20,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
+this.setScale(0.8);
+this.setOrigin(0.5, 0.8);
+
     if (classKey === "alquimista") {
       this.setSize(58, 110);
       this.setOffset(34, 118);
@@ -67,7 +70,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       left: "A",
       down: "S",
       right: "D",
-      dash: "Q",
+      dash: "SPACE",
     });
 
     this.dashing = false;
@@ -287,6 +290,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   updateAnimations(vx, vy) {
+    // Animacao de arremesso tem prioridade — nao interrompe durante a sequencia
+    if (this.animState === "throw" || this.animState === "throwFollow") return;
+
     let state = "idle";
 
     if (vx !== 0 || vy !== 0) {
@@ -304,7 +310,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     const animKey = `${this.classKey}-${this.animState}`;
 
     if (!this.scene.anims.exists(animKey)) {
-      console.warn("Animação não existe:", animKey);
+      console.warn("Animacao inexistente:", animKey);
       return;
     }
 
@@ -313,13 +319,51 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       this.lastAnim = animKey;
     }
 
-    // Se está parado, mostra apenas o frame de idle
     if (vx === 0 && vy === 0 && state === "idle") {
       this.stop();
-      // Mostra o primeiro frame da animação de idle
       const idleConfig = this.classConfig.animations.idle;
       this.setFrame(idleConfig.start);
     }
+  }
+
+  /**
+   * Executa a sequencia de animacao de arremesso do alquimista.
+   * Reproduz "throw" (backswing + lancamento), seguido de "throwFollow"
+   * (follow-through pos-lancamento), e entao retorna ao estado anterior.
+   * Deve ser chamado por WeaponSystem imediatamente antes de lancar o projetil.
+   */
+  playThrowAnimation() {
+    if (this.classKey !== "alquimista") return;
+
+    const throwKey      = "alquimista-throw";
+    const followKey     = "alquimista-throwFollow";
+
+    if (!this.scene.anims.exists(throwKey) || !this.scene.anims.exists(followKey)) {
+      console.warn("Animacoes de arremesso nao encontradas:", throwKey, followKey);
+      return;
+    }
+
+    this.animState = "throw";
+    this.lastAnim  = throwKey;
+    this.play(throwKey, true);
+
+    this.once(Phaser.Animations.Events.ANIMATION_COMPLETE_KEY + throwKey, () => {
+      if (this.animState !== "throw") return;
+
+      this.animState = "throwFollow";
+      this.lastAnim  = followKey;
+      this.play(followKey, true);
+
+      this.once(Phaser.Animations.Events.ANIMATION_COMPLETE_KEY + followKey, () => {
+        if (this.animState !== "throwFollow") return;
+
+        // Retorna ao estado de movimento ou idle conforme velocidade atual
+        const vel = this.body?.velocity;
+        const moving = vel && (Math.abs(vel.x) > 5 || Math.abs(vel.y) > 5);
+        this.animState = moving ? "walk" : "idle";
+        this.lastAnim  = "";
+      });
+    });
   }
 
   // MORTE DO PLAYER

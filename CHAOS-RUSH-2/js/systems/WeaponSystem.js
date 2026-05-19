@@ -85,30 +85,27 @@ export default class WeaponSystem {
     Object.keys(this.cooldowns).forEach((k) => (this.cooldowns[k] = false));
   }
 
-  // ─────────────── 🧪 FRASCO INSTÁVEL ───────────────
+  // ─────────────── FRASCO INSTAVEL ───────────────
   _useFrasco() {
 
     const scene = this.scene;
     const p = this.player;
 
-    const aoeMultiplier = this.getStat("aoe", 1);
+    const aoeMultiplier   = this.getStat("aoe", 1);
     const projectileSpeed = this.getStat("projectileSpeed", 1);
-    const pierce = Math.max(0, Math.floor(this.getStat("pierce", 0)));
+    const pierce          = Math.max(0, Math.floor(this.getStat("pierce", 0)));
 
     const target = scene.getClosestEnemy(450 * aoeMultiplier);
     if (!target) return;
 
-    // verifica textura antes de criar
     if (!scene.textures.exists("flask")) {
-      console.error("❌ Textura 'flask' não encontrada! Verifique o preload().");
+      console.error("Textura 'flask' nao encontrada. Verifique o preload().");
       return;
     }
 
-    // efeitos possíveis
-    const effects = ["fire", "poison", "slow"];
+    const effects      = ["fire", "poison", "slow"];
     const chosenEffect = effects[Math.floor(Math.random() * effects.length)];
 
-    // bônus de área apenas para slow
     const slowRadiusBonus =
       chosenEffect === "slow"
         ? this.getStat("slowRadiusBonus", 0)
@@ -116,40 +113,30 @@ export default class WeaponSystem {
 
     const finalRadius = (FRASCO_CONFIG.AREA_RADIUS + slowRadiusBonus) * aoeMultiplier;
 
-    // calcula ângulo até o inimigo
-    const baseAngle = Phaser.Math.Angle.Between(
-      p.x,
-      p.y,
-      target.x,
-      target.y
-    );
-
-    // pequeno espalhamento
-    const spread = Phaser.Math.FloatBetween(-0.08, 0.08);
+    const baseAngle  = Phaser.Math.Angle.Between(p.x, p.y, target.x, target.y);
+    const spread     = Phaser.Math.FloatBetween(-0.08, 0.08);
     const finalAngle = baseAngle + spread;
 
-    // cria frasco
+    // Dispara a sequencia de animacao de arremesso antes de lancar o projetil
+    p.playThrowAnimation?.();
+
     const flask = scene.physics.add
       .sprite(p.x, p.y, "flask")
       .setDepth(5)
       .setTint(getDebuffColor(chosenEffect));
 
-    // guarda o efeito no objeto
-    flask.effect = chosenEffect;
-    flask.pierceLeft = pierce;
-    flask.hitEnemies = new Set();
+    flask.effect      = chosenEffect;
+    flask.pierceLeft  = pierce;
+    flask.hitEnemies  = new Set();
 
-    // aplica velocidade
     scene.physics.velocityFromRotation(
       finalAngle,
       FRASCO_CONFIG.VELOCITY * projectileSpeed,
       flask.body.velocity
     );
 
-    // pequena rotação visual opcional
     flask.setAngularVelocity(300);
 
-    // cooldown da habilidade
     this.startCooldown("frascoInstavel", 1200);
 
     // colisão com inimigos

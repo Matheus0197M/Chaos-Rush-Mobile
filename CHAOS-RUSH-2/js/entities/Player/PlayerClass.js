@@ -23,16 +23,34 @@ export const PLAYER_CLASSES = {
     },
 
 animations: {
-  idle: { start: 0, end: 0, frameRate: 1, repeat: -1 },
-  walk: { start: 0, end: 7, frameRate: 7, repeat: -1 }
+  walk: {
+    start: 0,
+    end: 4.5,
+    frameRate: 4,
+    repeat: -1
+  },
+
+  throw: {
+    start: 6,
+    end: 7,
+    frameRate: 10,
+    repeat: 0
+  },
+
+  idle: {
+    start: 9,
+    end: 9,
+    frameRate: 1,
+    repeat: -1
+  }
 },
-    passive: PassiveAlquimista,
+passive: PassiveAlquimista,
     weaponKey: "frascoInstavel",
-    spriteWidth: 120,
-    spriteHeight: 200,
-    hitboxWidth: 120,
-    hitboxHeight: 200,
-    spriteScale: 1
+  spriteWidth: 128,
+  spriteHeight: 128,
+  hitboxWidth: 42,
+  hitboxHeight: 58,
+  spriteScale: 1
   },
 
   coveiro: {

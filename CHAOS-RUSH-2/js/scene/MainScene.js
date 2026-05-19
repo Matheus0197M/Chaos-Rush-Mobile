@@ -29,11 +29,12 @@ export default class MainScene extends Phaser.Scene {
     this.load.image('mapPlanicie', 'assets/img/mapa atualizado pt4.png');
     this.load.image('mapGrave', 'assets/img/mapa gravenigger.png');
 
-    this.load.spritesheet("alquimista", "assets/Sprites/Alquimista12.png", {
-      frameWidth: 125,
-      frameHeight: 250,
-      endFrame: 7
-    });
+this.load.spritesheet("alquimista", "assets/Sprites/alquimistateste.png", {
+  frameWidth: 118,
+  frameHeight: 176,
+  spacing: 0,
+  margin: 0
+});
 
     this.load.spritesheet("coveiro", "assets/Sprites/coveiro-recortado.png", {
       frameWidth: 288,
