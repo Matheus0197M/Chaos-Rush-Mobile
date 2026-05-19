@@ -25,7 +25,7 @@ export const PLAYER_CLASSES = {
 animations: {
   walk: {
     start: 0,
-    end: 4.5,
+    end: 4,
     frameRate: 4,
     repeat: -1
   },
@@ -41,6 +41,13 @@ animations: {
     start: 9,
     end: 9,
     frameRate: 1,
+    repeat: -1
+  },
+
+  throwFollow: {
+    start: 6,
+    end: 7,
+    frameRate: 10,
     repeat: -1
   }
 },
