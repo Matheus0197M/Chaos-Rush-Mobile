@@ -318,12 +318,6 @@ this.setOrigin(0.5, 0.8);
       this.play(animKey, true);
       this.lastAnim = animKey;
     }
-
-    if (vx === 0 && vy === 0 && state === "idle") {
-      this.stop();
-      const idleConfig = this.classConfig.animations.idle;
-      this.setFrame(idleConfig.start);
-    }
   }
 
   /**
@@ -335,8 +329,8 @@ this.setOrigin(0.5, 0.8);
   playThrowAnimation() {
     if (this.classKey !== "alquimista") return;
 
-    const throwKey      = "alquimista-throw";
-    const followKey     = "alquimista-throwFollow";
+    const throwKey  = "alquimista-throw";
+    const followKey = "alquimista-throwFollow";
 
     if (!this.scene.anims.exists(throwKey) || !this.scene.anims.exists(followKey)) {
       console.warn("Animacoes de arremesso nao encontradas:", throwKey, followKey);
@@ -347,23 +341,32 @@ this.setOrigin(0.5, 0.8);
     this.lastAnim  = throwKey;
     this.play(throwKey, true);
 
-    this.once(Phaser.Animations.Events.ANIMATION_COMPLETE_KEY + throwKey, () => {
+    const onThrowComplete = (animation) => {
+      if (animation.key !== throwKey) return;
+      this.off(Phaser.Animations.Events.ANIMATION_COMPLETE, onThrowComplete);
+
       if (this.animState !== "throw") return;
 
       this.animState = "throwFollow";
       this.lastAnim  = followKey;
       this.play(followKey, true);
 
-      this.once(Phaser.Animations.Events.ANIMATION_COMPLETE_KEY + followKey, () => {
+      const onFollowComplete = (animation2) => {
+        if (animation2.key !== followKey) return;
+        this.off(Phaser.Animations.Events.ANIMATION_COMPLETE, onFollowComplete);
+
         if (this.animState !== "throwFollow") return;
 
-        // Retorna ao estado de movimento ou idle conforme velocidade atual
         const vel = this.body?.velocity;
         const moving = vel && (Math.abs(vel.x) > 5 || Math.abs(vel.y) > 5);
         this.animState = moving ? "walk" : "idle";
-        this.lastAnim  = "";
-      });
-    });
+        this.lastAnim = "";
+      };
+
+      this.on(Phaser.Animations.Events.ANIMATION_COMPLETE, onFollowComplete);
+    };
+
+    this.on(Phaser.Animations.Events.ANIMATION_COMPLETE, onThrowComplete);
   }
 
   // MORTE DO PLAYER

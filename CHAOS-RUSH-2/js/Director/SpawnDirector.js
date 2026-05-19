@@ -13,10 +13,11 @@ export default class SpawnDirector {
         this.baseMaxEnemies = 25;
 
         // 🧩 COMPOSIÇÃO
-        this.enemyPool = ["chaser"];
+        this.enemyPool = ["chaser", "wanderer"];
 
         this.enemyWeights = {
             chaser: 5,
+            wanderer: 3,
             shooter: 2,
             tank: 1,
             elite: 0.5
@@ -53,6 +54,7 @@ export default class SpawnDirector {
         this.activePerType = {};
         this.maxPerType = {
             chaser: 20,
+            wanderer: 10,
             shooter: 8,
             tank: 5,
             elite: 2

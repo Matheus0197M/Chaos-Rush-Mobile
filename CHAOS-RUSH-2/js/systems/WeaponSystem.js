@@ -159,6 +159,7 @@ export default class WeaponSystem {
           f.effect,
           finalRadius
         );
+        this._applyFlaskDebuff(enemy, f.effect);
 
         // dentro do collider em _useFrasco, antes de f.destroy()
         const hit = scene.add.graphics().setDepth(999);

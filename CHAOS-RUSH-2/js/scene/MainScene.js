@@ -10,6 +10,24 @@ import { PLAYER_CLASSES } from "../entities/Player/PlayerClass.js";
 import EnemyBullet from "../entities/Enemy/EnemyBullet.js";
 import { saveBestRanking } from "../systems/RankingService.js";
 
+const ENEMY_SPRITE_CROPS = {
+  chaser: {
+    front: { x: 52, y: 134, w: 150, h: 200 },
+    side: { x: 266, y: 146, w: 210, h: 180 },
+    back: { x: 566, y: 134, w: 125, h: 195 }
+  },
+  wanderer: {
+    front: { x: 42, y: 560, w: 175, h: 165 },
+    side: { x: 276, y: 560, w: 180, h: 160 },
+    back: { x: 540, y: 560, w: 175, h: 160 }
+  },
+  shooter: {
+    front: { x: 50, y: 940, w: 145, h: 200 },
+    side: { x: 292, y: 935, w: 165, h: 200 },
+    back: { x: 562, y: 932, w: 135, h: 200 }
+  }
+};
+
 export default class MainScene extends Phaser.Scene {
   constructor() {
     // chave da scene (consistente com o que você usa ao start)
@@ -23,16 +41,18 @@ export default class MainScene extends Phaser.Scene {
       { key: "player", color: 0xffffff, type: "rect", w: 20, h: 20 },
       { key: "enemy", color: 0xff3333, type: "rect", w: 20, h: 20 },
       { key: "xp_orb", color: 0x6a00ff, type: "circle", r: 5 },
-      { key: "flask", color: 0xffffff, type: "rect", w: 8, h: 8 }
+      { key: "flask", color: 0xffffff, type: "flask", w: 14, h: 16 },
+      { key: "bottle", color: 0xffffff, type: "flask", w: 14, h: 16 }
     ];
 
     this.load.image('mapPlanicie', 'assets/img/mapa atualizado pt4.png');
     this.load.image('mapGrave', 'assets/img/mapa gravenigger.png');
+    this.load.image("enemySprites", "assets/Sprites/inimigos.png");
 
 this.load.spritesheet("alquimista", "assets/Sprites/alquimistateste.png", {
-  frameWidth: 118,
+  frameWidth: 117,
   frameHeight: 176,
-  spacing: 0,
+  spacing: 1,
   margin: 0
 });
 
@@ -57,8 +77,16 @@ this.load.spritesheet("alquimista", "assets/Sprites/alquimistateste.png", {
       g.clear();
       g.fillStyle(shape.color, 1);
 
-      if (shape.type === "rect") g.fillRect(0, 0, shape.w, shape.h);
-      else g.fillCircle(shape.r, shape.r, shape.r);
+      if (shape.type === "rect") {
+        g.fillRect(0, 0, shape.w, shape.h);
+      } else if (shape.type === "circle") {
+        g.fillCircle(shape.r, shape.r, shape.r);
+      } else if (shape.type === "flask") {
+        g.fillStyle(shape.color, 1);
+        g.fillRoundedRect(4, 2, 6, 10, 2);
+        g.fillRect(5, 0, 4, 4);
+        g.fillCircle(7, 5, 2);
+      }
 
       g.generateTexture(shape.key, shape.w || shape.r * 2, shape.h || shape.r * 2);
     });
@@ -186,6 +214,7 @@ this.load.spritesheet("alquimista", "assets/Sprites/alquimistateste.png", {
     this.resetRunState();
     this.events.once("shutdown", this.shutdownRun, this);
     this.time.timeScale = 1;
+    this.createEnemySpriteTextures();
 
     // Tecla ESC do menu de pausa
     this.escPauseHandler = () => {
@@ -905,5 +934,118 @@ this.load.spritesheet("alquimista", "assets/Sprites/alquimistateste.png", {
     this.physics.pause();
     this.scene.pause();
     this.time.timeScale = 0;
+  }
+
+  createEnemySpriteTextures() {
+    if (!this.textures.exists("enemySprites")) return;
+
+    const source = this.textures.get("enemySprites").getSourceImage();
+    if (!source) return;
+
+    Object.entries(ENEMY_SPRITE_CROPS).forEach(([variant, poses]) => {
+      Object.entries(poses).forEach(([pose, crop]) => {
+        const key = `enemy_${variant}_${pose}`;
+        if (this.textures.exists(key)) return;
+
+        const texture = this.textures.createCanvas(key, crop.w, crop.h);
+        const context = texture.getContext();
+        context.clearRect(0, 0, crop.w, crop.h);
+        context.drawImage(
+          source,
+          crop.x,
+          crop.y,
+          crop.w,
+          crop.h,
+          0,
+          0,
+          crop.w,
+          crop.h
+        );
+
+        this.removeConnectedEnemySheetBackground(context, crop.w, crop.h);
+        this.enhanceEnemySpriteTexture(context, crop.w, crop.h, variant);
+        texture.refresh();
+      });
+    });
+  }
+
+  enhanceEnemySpriteTexture(context, width, height, variant) {
+    if (variant !== "chaser") return;
+
+    const imageData = context.getImageData(0, 0, width, height);
+    const { data } = imageData;
+
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 3] === 0) continue;
+
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+
+      if (max < 32 && max - min < 12) continue;
+
+      const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+      const saturation = 1.22;
+      const contrast = 1.28;
+      const brightness = 16;
+
+      data[i] = Phaser.Math.Clamp(((luminance + (r - luminance) * saturation - 128) * contrast) + 128 + brightness, 0, 255);
+      data[i + 1] = Phaser.Math.Clamp(((luminance + (g - luminance) * saturation - 128) * contrast) + 128 + brightness, 0, 255);
+      data[i + 2] = Phaser.Math.Clamp(((luminance + (b - luminance) * saturation - 128) * contrast) + 128 + brightness, 0, 255);
+    }
+
+    context.putImageData(imageData, 0, 0);
+  }
+
+  removeConnectedEnemySheetBackground(context, width, height) {
+    const imageData = context.getImageData(0, 0, width, height);
+    const { data } = imageData;
+    const visited = new Uint8Array(width * height);
+    const queue = [];
+
+    const isSheetBackground = index => {
+      const offset = index * 4;
+      const r = data[offset];
+      const g = data[offset + 1];
+      const b = data[offset + 2];
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      return max >= 14 && max <= 46 && max - min <= 16;
+    };
+
+    const enqueue = (x, y) => {
+      if (x < 0 || y < 0 || x >= width || y >= height) return;
+      const index = y * width + x;
+      if (visited[index] || !isSheetBackground(index)) return;
+      visited[index] = 1;
+      queue.push(index);
+    };
+
+    for (let x = 0; x < width; x++) {
+      enqueue(x, 0);
+      enqueue(x, height - 1);
+    }
+
+    for (let y = 0; y < height; y++) {
+      enqueue(0, y);
+      enqueue(width - 1, y);
+    }
+
+    while (queue.length > 0) {
+      const index = queue.pop();
+      const offset = index * 4;
+      data[offset + 3] = 0;
+
+      const x = index % width;
+      const y = Math.floor(index / width);
+      enqueue(x + 1, y);
+      enqueue(x - 1, y);
+      enqueue(x, y + 1);
+      enqueue(x, y - 1);
+    }
+
+    context.putImageData(imageData, 0, 0);
   }
 }
