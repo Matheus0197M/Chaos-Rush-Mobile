@@ -44,12 +44,19 @@ animations: {
     repeat: -1
   },
 
-  throwFollow: {
-    start: 6,
-    end: 7,
-    frameRate: 10,
-    repeat: -1
-  }
+throw: {
+  start: 16,
+  end: 19,
+  frameRate: 12,
+  repeat: 0
+},
+
+throwFollow: {
+  start: 20,
+  end: 23,
+  frameRate: 12,
+  repeat: 0
+}
 },
 passive: PassiveAlquimista,
     weaponKey: "frascoInstavel",
