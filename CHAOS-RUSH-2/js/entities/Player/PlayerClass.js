@@ -1,6 +1,6 @@
 import PassiveAlquimista from "../../systems/PassiveSystem/PassiveAlquimista.js";
 import PassiveCoveiro from "../../systems/PassiveSystem/PassiveCoveiro.js";
-import PassiveSentinela from "../../systems/PassiveSystem/PassiveSentinela.js";
+import PassiveBastiao from "../../systems/PassiveSystem/PassiveBastiao.js";
 
 export const PLAYER_CLASSES = {
   alquimista: {
@@ -81,25 +81,30 @@ passive: PassiveAlquimista,
     spriteScale: 0.8
   },
 
-  sentinela: {
-    key: "sentinela",
-    texture: "sentinela",
+  bastiao: {
+    key: "bastiao",
+    texture: "bastiao",
     frame: 0,
 
     stats: {
-      maxHP: 140,
-      armor: 4,
-      shield: 10,
-      auraRange: 150
+      maxHP: 160,
+      armor: 6,
+      damageMultiplier: 1.15,
+      attackSpeed: 0.8,
+      auraRange: 140
     },
 
     animations: {
       idle: { start: 0, end: 0, frameRate: 1, repeat: -1 },
-      walk: { start: 0, end: 7, frameRate: 6, repeat: -1 }
+      walk: { start: 0, end: 5, frameRate: 4, repeat: -1 }
     },
 
-    passive: PassiveSentinela,
-    weaponKey: "sinoPurificacao",
-    locked: true
+    passive: PassiveBastiao,
+    weaponKey: "pilarCombustao",
+    spriteWidth: 128,
+    spriteHeight: 128,
+    hitboxWidth: 60,
+    hitboxHeight: 80,
+    spriteScale: 1.1
   }
 };

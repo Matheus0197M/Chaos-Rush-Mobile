@@ -68,6 +68,9 @@ export default class WeaponSystem {
       case "sinoPurificacao":
         this._useBell();
         break;
+      case "pilarCombustao":
+        this._usePilarCombustao();
+        break;
       default:
         console.warn("⚠️ Arma não reconhecida:", key);
         break;
@@ -619,5 +622,61 @@ export default class WeaponSystem {
     scene.time.delayedCall(260, () => {
       if (wave && wave.destroy) wave.destroy();
     });
+  }
+
+  // ─────────────── ⚙️ BASTIÃO: PILAR DE COMBUSTÃO ───────────────
+  _usePilarCombustao() {
+    const scene = this.scene;
+    const p = this.player;
+    const damageMultiplier = this.getStat("damage", 1);
+    
+    // Dano base aumentado por Calor acumulado
+    const heatBonus = p.currentHeat ? (1 + p.currentHeat * 0.005) : 1;
+    const baseDamage = 20 * damageMultiplier * heatBonus;
+
+    // Procurar inimigos na frente
+    const radius = 100 * this.getStat("aoe", 1);
+    const direction = p.facingRight ? 1 : -1;
+    const searchX = p.x + direction * 60;
+
+    scene.enemies.children.iterate((e) => {
+      if (!e || !e.active || e.isDead) return;
+      const d = Phaser.Math.Distance.Between(e.x, e.y, searchX, p.y);
+      if (d <= radius) {
+        // Aplicar dano
+        this.dealDamage(e, baseDamage);
+
+        // Criar explosão visual ao acertar
+        const explosion = scene.add.graphics();
+        explosion.setDepth(5);
+
+        scene.tweens.add({
+          targets: explosion,
+          duration: 200,
+          onUpdate: (tween) => {
+            const r = 40 * tween.progress;
+            explosion.clear();
+            explosion.fillStyle(0xff4400, 0.4 - 0.4 * tween.progress);
+            explosion.fillCircle(e.x, e.y, r);
+          },
+          onComplete: () => {
+            explosion.destroy();
+          },
+        });
+
+        // Som de impacto (opcional, se houver sistema de audio)
+        // scene.sound.play("impactHeavy", { volume: 0.5 });
+      }
+    });
+
+    // Golpe também gera calor (feedback mecânico)
+    if (p.currentHeat !== undefined) {
+      p.currentHeat = Math.min(p.currentHeat + 8, 100);
+      if (scene.passiveSystem?.current === "bastiao" && scene.passiveSystem.active?.updateHUDDisplay) {
+        scene.passiveSystem.active.updateHUDDisplay();
+      }
+    }
+
+    this.startCooldown("pilarCombustao", 1200);
   }
 }
