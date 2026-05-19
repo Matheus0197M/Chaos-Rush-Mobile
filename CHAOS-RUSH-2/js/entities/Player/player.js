@@ -345,7 +345,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       };
 
       this.on(Phaser.Animations.Events.ANIMATION_COMPLETE, onFollowComplete);
-    });
+    };
 
     this.on(Phaser.Animations.Events.ANIMATION_COMPLETE, onThrowComplete);
         this.play(followKey, true);
@@ -364,6 +364,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
           }
         );
       }
+    );
   }
 
   die() {
