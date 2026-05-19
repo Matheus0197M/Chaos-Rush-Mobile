@@ -25,6 +25,8 @@ export const PLAYER_CLASSES = {
 animations: {
   walk: {
     start: 0,
+    end: 5,
+    frameRate: 8,
     end: 4,
     frameRate: 4,
     repeat: -1
@@ -32,14 +34,21 @@ animations: {
 
   throw: {
     start: 6,
-    end: 7,
+    end: 8,
+    frameRate: 10,
+    repeat: 0
+  },
+
+  throwFollow: {
+    start: 9,
+    end: 11,
     frameRate: 10,
     repeat: 0
   },
 
   idle: {
-    start: 9,
-    end: 9,
+    start: 0,
+    end: 0,
     frameRate: 1,
     repeat: -1
   },
@@ -60,8 +69,8 @@ throwFollow: {
 },
 passive: PassiveAlquimista,
     weaponKey: "frascoInstavel",
-  spriteWidth: 128,
-  spriteHeight: 128,
+  spriteWidth: 117,
+  spriteHeight: 176,
   hitboxWidth: 42,
   hitboxHeight: 58,
   spriteScale: 1

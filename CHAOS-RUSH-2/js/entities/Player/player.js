@@ -308,6 +308,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       this.lastAnim = animKey;
     }
 
+
     if (vx === 0 && vy === 0 && state === "idle") {
 
       this.stop();
@@ -322,6 +323,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     if (this.classKey !== "alquimista") return;
 
+    const throwKey  = "alquimista-throw";
     const throwKey = "alquimista-throw";
     const followKey = "alquimista-throwFollow";
 
@@ -337,12 +339,33 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     this.play(throwKey, true);
 
+    const onThrowComplete = (animation) => {
+      if (animation.key !== throwKey) return;
+      this.off(Phaser.Animations.Events.ANIMATION_COMPLETE, onThrowComplete);
+
+      if (this.animState !== "throw") return;
     this.once(
       Phaser.Animations.Events.ANIMATION_COMPLETE_KEY + throwKey,
       () => {
 
         this.animState = "throwFollow";
 
+      const onFollowComplete = (animation2) => {
+        if (animation2.key !== followKey) return;
+        this.off(Phaser.Animations.Events.ANIMATION_COMPLETE, onFollowComplete);
+
+        if (this.animState !== "throwFollow") return;
+
+        const vel = this.body?.velocity;
+        const moving = vel && (Math.abs(vel.x) > 5 || Math.abs(vel.y) > 5);
+        this.animState = moving ? "walk" : "idle";
+        this.lastAnim = "";
+      };
+
+      this.on(Phaser.Animations.Events.ANIMATION_COMPLETE, onFollowComplete);
+    };
+
+    this.on(Phaser.Animations.Events.ANIMATION_COMPLETE, onThrowComplete);
         this.play(followKey, true);
 
         this.once(

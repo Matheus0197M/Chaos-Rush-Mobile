@@ -19,14 +19,24 @@ const resolveVariant = (type) => {
   return "chaser";
 };
 
+const resolveSpriteVariant = (variant, aiType) => {
+  if (variant === "tank" || variant === "fast" || variant === "elite") return "chaser";
+  return aiType;
+};
+
 export default class Enemy extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y, type = "chaser") {
-    super(scene, x, y, "enemy");
+    const aiType = resolveAIType(type);
+    const variant = resolveVariant(type);
+    const spriteVariant = resolveSpriteVariant(variant, aiType);
+    const textureKey = `enemy_${spriteVariant}_front`;
+    super(scene, x, y, scene.textures.exists(textureKey) ? textureKey : "enemy");
 
     this.scene = scene;
-    this.variant = resolveVariant(type);
-    this.aiType = resolveAIType(type);
-    this.applyTint();
+    this.variant = variant;
+    this.aiType = aiType;
+    this.spriteVariant = spriteVariant;
+    this.spritePose = "front";
 
     // alvo padrão
     this.target = scene.player ?? null;
@@ -71,9 +81,8 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.setDepth(5);
     this.setCollideWorldBounds(false);
     this.body.setAllowGravity(false);
-    this.setSize(18, 18);
-    this.setOffset(1, 1);
-    this.setTint(stats.tint);
+    this.configureSpriteBody();
+    this.applyTint();
 
     // -------------------------
     // COMPORTAMENTO
@@ -132,6 +141,8 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.updateChaser(this.target);
         break;
     }
+
+    this.updateSpritePose();
   }
 
   setTarget(target) {
@@ -221,6 +232,64 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
 
 
   // =====================================================
+  configureSpriteBody() {
+    this.clearTint();
+    this.setOrigin(0.5, 0.65);
+
+    const displaySizes = {
+      chaser: { w: 54, h: 72 },
+      wanderer: { w: 58, h: 46 },
+      shooter: { w: 48, h: 70 }
+    };
+
+    const bodySizes = {
+      chaser: { w: 44, h: 48 },
+      wanderer: { w: 52, h: 34 },
+      shooter: { w: 38, h: 56 }
+    };
+
+    const display = displaySizes[this.spriteVariant] ?? displaySizes.chaser;
+    const body = bodySizes[this.spriteVariant] ?? bodySizes.chaser;
+
+    this.setDisplaySize(display.w, display.h);
+
+    const frameWidth = this.frame?.realWidth || this.width || display.w;
+    const frameHeight = this.frame?.realHeight || this.height || display.h;
+    const scaleX = display.w / frameWidth;
+    const scaleY = display.h / frameHeight;
+
+    this.body.setSize(body.w / scaleX, body.h / scaleY, true);
+  }
+
+  updateSpritePose() {
+    const lookTarget = this.target?.active ? this.target : this.scene.player;
+    if (!lookTarget?.active) return;
+
+    const dx = lookTarget.x - this.x;
+    const dy = lookTarget.y - this.y;
+    if (Math.abs(dx) < 2 && Math.abs(dy) < 2) return;
+
+    let pose = "front";
+    let flipX = false;
+
+    if (Math.abs(dx) > Math.abs(dy) * 0.65) {
+      pose = "side";
+      flipX = dx < 0;
+    } else if (dy < 0) {
+      pose = "back";
+    }
+
+    const key = `enemy_${this.spriteVariant}_${pose}`;
+    if (this.scene.textures.exists(key) && (this.spritePose !== pose || this.texture.key !== key)) {
+      this.spritePose = pose;
+      this.setTexture(key);
+      this.configureSpriteBody();
+    }
+
+    this.setFlipX(flipX);
+  }
+
+  // =====================================================
   preShootWarning(target) {
     // aviso visual de disparo
     this.setTint(0xff3333);
@@ -291,13 +360,18 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
   // =====================================================
 
   applyTint() {
-    const tints = {
+    const fallbackTints = {
       chaser: 0xff3333,
       wanderer: 0x33ff33,
       shooter: 0xff9900,
     };
 
-    this.setTint(tints[this.aiType] ?? 0xffffff);
+    if (this.texture?.key?.startsWith("enemy_")) {
+      this.clearTint();
+      return;
+    }
+
+    this.setTint(fallbackTints[this.aiType] ?? 0xffffff);
   }
 
   takeDamage(amount, options = {}) {
